@@ -1,8 +1,8 @@
 # Setup
 1. Use 3 parallel processes (worktrees created from main branch)
-   - Backend worktree (sync to backend branch)
-   - Web worktree - React (sync to web branch)
-   - Mobile worktree - Flutter for iOS and Android (sync to the app branch)
+   - Backend worktree (local: arc-backend, sync to backend branch)
+   - Web worktree - React (local: arc-web, sync to web branch)
+   - Mobile worktree - Flutter for iOS and Android (local: arc-mobile, sync to the mobile branch)
 2. Branch setup
    - Staging branch
    - Production branch (protected)

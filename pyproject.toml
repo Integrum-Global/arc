@@ -3,9 +3,9 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "client_project_template"
+name = "arc"
 version = "0.1.0"
-description = "Enterprise client project template using Kailash SDK"
+description = "Alpha Risk Capital Investment Management"
 authors = [
     {name = "Integrum", email = "info@integrum.com"}
 ]
@@ -62,8 +62,8 @@ dev = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/integrum/new_project_template"
-"Bug Tracker" = "https://github.com/integrum/new_project_template/issues"
+"Homepage" = "https://github.com/integrum/arc"
+"Bug Tracker" = "https://github.com/integrum/arc/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
