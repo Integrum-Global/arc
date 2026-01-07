@@ -1,6 +1,6 @@
 # Adding new features/Resolving new issues
 1. Discuss the following new features/issues:
-   -
+   - SSO (Azure AD, Github, Google, Apple)
 2. Please work with subagents and document the plans into 02-plans, following our sequential numbering convention.
 3. You MUST always use the todo-manager to create the detailed todos FOR EVERY SINGLE TODO in 000-master.md
    - Review with subagents, before implementation.
