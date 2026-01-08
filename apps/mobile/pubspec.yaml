@@ -1,0 +1,81 @@
+name: arc_mobile
+description: "ARC Investment Platform - Mobile App"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.0
+  riverpod_annotation: ^2.4.0
+
+  # Navigation
+  go_router: ^14.0.0
+
+  # Networking
+  dio: ^5.4.0
+
+  # Data Classes & Serialization
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Local Storage
+  hive_flutter: ^1.1.0
+  flutter_secure_storage: ^9.2.0
+
+  # UI Components
+  fl_chart: ^0.68.0
+  cached_network_image: ^3.3.0
+  flutter_svg: ^2.0.10
+  shimmer: ^3.0.0
+  share_plus: ^10.0.0
+
+  # Utilities
+  intl: ^0.19.0
+  logger: ^2.4.0
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Code Generation
+  build_runner: ^2.4.0
+  freezed: ^2.5.0
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.4.0
+
+  # Testing
+  mocktail: ^1.0.0
+
+  # Linting
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets configuration
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+  #   - assets/fonts/
+
+  # Fonts configuration
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700

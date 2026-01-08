@@ -1,0 +1,32 @@
+# Build configuration for code generation.
+# Run: flutter pub run build_runner build --delete-conflicting-outputs
+
+targets:
+  $default:
+    builders:
+      # Freezed for immutable data classes
+      freezed:
+        generate_for:
+          include:
+            - lib/**/*.dart
+          exclude:
+            - lib/**/*.g.dart
+            - lib/**/*.freezed.dart
+        options:
+          format: true
+
+      # JSON Serializable for JSON conversion
+      json_serializable:
+        options:
+          explicit_to_json: true
+          include_if_null: false
+          field_rename: snake
+
+      # Riverpod Generator for providers
+      riverpod_generator:
+        generate_for:
+          include:
+            - lib/**/*.dart
+          exclude:
+            - lib/**/*.g.dart
+            - lib/**/*.freezed.dart
