@@ -1,9 +1,8 @@
 ## From todos to implementation
-1. Peruse docs/04-instructions/README.md and actively reference any docs so that you can achieve a high level of situational awareness on this project
-   - (if you are the ...-backend worktree) Follow the instructions given in docs/04-instructions/01-backend-worktree.md and implement.
-   - (if you are the ...-web worktree) Follow the instructions given in docs/04-instructions/02-web-worktree.md and implement.
-   - (if you are the ...-mobile worktree) Follow the instructions given in docs/04-instructions/03-mobile-worktree.md and implement.
-   - For reference (if required), consult 04-instructions/04-integration-guide.md to understand how the codebases will come together eventually.
+1. Peruse docs/04-instructions/00-overview.md and actively reference docs/02-plans so that you can achieve a high level of situational awareness on this project
+   - (if you are the ...-backend worktree) Follow the instructions given in docs/04-instructions/01-backend-instructions.md and implement.
+   - (if you are the ...-web worktree) Follow the instructions given in docs/04-instructions/02-web-instructions.md and implement.
+   - (if you are the ...-mobile worktree) Follow the instructions given in docs/04-instructions/03-mobile-instructions.md and implement.
 2. You MUST always use the todo-manager to create the detailed todos FOR EVERY SINGLE TODO in 000-master.md
    - Review with subagents, before implementation.
 3. Continue with the implementation of the next todo/phase using our subagents, following our procedural directives.
