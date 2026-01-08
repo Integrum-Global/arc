@@ -28,9 +28,9 @@
      - Do not rewrite the tests just to get them passing but ensure that it's not infrastructure issues that is causing the errors.
      - Always tests according to the intent of what we are trying to achieve and against users' expectations
        - Do not write simple naive technical assertions.
-       - Do not have stubs, hardcodes, simulations, silent naive fallbacks without informative logs.
+       - Do not have stubs, hardcodes, simulations, naive fallbacks without informative logs.
 5. When writing agents, always remember to utilize the LLM's capabilities instead of naive NLP approaches such as keywords, regex etc.
-6. At the end of each phase, write your docs into docs/
+6. At the end of each phase, write your docs into src/.../docs/developers
    - using as many subdirectories and files as required, and naming them sequentially 00-, 01- for easy referencing.
    - Your docs must focus on capturing the essence and intent, the 'what it is' and 'how to use it', and not status/progress/reports and other irrelevant information.
 
