@@ -256,17 +256,23 @@ This master list tracks all implementation tasks for the ARC investment manageme
 
 ## Phase 4: Web Frontend
 
+**NOTE**: Web frontend uses Next.js 15 with App Router (NOT Vite). See `docs/02-plans/04-web-frontend/01-architecture.md` for full architecture.
+
 ### 4.1 Project Setup
-- [ ] TODO-WEB-001: React project initialization (Priority: HIGH)
+- [ ] TODO-WEB-001: Next.js 15 project initialization (Priority: HIGH)
   - Status: ACTIVE
-  - Estimated Effort: 4h
+  - Estimated Effort: 6h
   - File: `todos/active/TODO-WEB-001-project-setup.md`
+  - **Detailed Checklist**: `todos/active/TODO-WEB-001-detailed.md`
+  - Tech Stack: Next.js 15, TypeScript, TailwindCSS 4.x, Shadcn/ui
 
 - [ ] TODO-WEB-002: Design system implementation (Priority: HIGH)
   - Status: ACTIVE
   - Dependencies: TODO-WEB-001
-  - Estimated Effort: 8h
+  - Estimated Effort: 10h
   - File: `todos/active/TODO-WEB-002-design-system.md`
+  - **Detailed Checklist**: `todos/active/TODO-WEB-002-detailed.md`
+  - Components: Design tokens, typography, dark mode, financial value display
 
 ### 4.2 Core Components
 - [ ] TODO-WEB-003: Layout components (Priority: HIGH)
