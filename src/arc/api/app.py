@@ -93,12 +93,20 @@ async def shutdown_database() -> None:
 
 # Initialize Nexus with production-safe settings
 # CRITICAL: auto_discovery=False prevents blocking during DataFlow integration
-app = Nexus(
+nexus = Nexus(
     api_port=settings.api.port,
     auto_discovery=False,  # CRITICAL: Prevents infinite blocking with DataFlow
     enable_monitoring=True,
     rate_limit=100,  # Requests per minute
 )
+
+# CRITICAL: Expose the underlying FastAPI app for uvicorn/ASGI compatibility
+# The Nexus object itself is not ASGI-callable, but the gateway's app is
+app = nexus._gateway.app
+
+# Register startup and shutdown event handlers
+app.add_event_handler("startup", initialize_database)
+app.add_event_handler("shutdown", shutdown_database)
 
 
 # =============================================================================
@@ -153,7 +161,7 @@ ALL_MODELS = CORE_MODELS + PORTFOLIO_MODELS + SECURITY_MODELS + ANALYTICS_MODELS
 # =============================================================================
 
 
-@app.endpoint("/health", methods=["GET"])
+@nexus.endpoint("/api/v1/health", methods=["GET"])
 async def health_check() -> dict[str, Any]:
     """
     Health check endpoint for monitoring and load balancers.
@@ -198,7 +206,7 @@ async def health_check() -> dict[str, Any]:
     return health_status
 
 
-@app.endpoint("/health/ready", methods=["GET"])
+@nexus.endpoint("/api/v1/health/ready", methods=["GET"])
 async def readiness_check() -> dict[str, Any]:
     """
     Kubernetes readiness probe endpoint.
@@ -222,7 +230,7 @@ async def readiness_check() -> dict[str, Any]:
         }
 
 
-@app.endpoint("/health/live", methods=["GET"])
+@nexus.endpoint("/api/v1/health/live", methods=["GET"])
 async def liveness_check() -> dict[str, Any]:
     """
     Kubernetes liveness probe endpoint.
@@ -254,7 +262,7 @@ from arc.api.routes.auth import (  # noqa: E402
 )
 
 
-@app.endpoint("/auth/login", methods=["POST"])
+@nexus.endpoint("/api/v1/auth/login", methods=["POST"])
 async def auth_login(email: str, password: str) -> dict[str, Any]:
     """
     Authenticate user with email and password.
@@ -265,7 +273,7 @@ async def auth_login(email: str, password: str) -> dict[str, Any]:
     return await login(data)
 
 
-@app.endpoint("/auth/register", methods=["POST"])
+@nexus.endpoint("/api/v1/auth/register", methods=["POST"])
 async def auth_register(
     email: str,
     password: str,
@@ -286,7 +294,7 @@ async def auth_register(
     return await register(data)
 
 
-@app.endpoint("/auth/me", methods=["GET"])
+@nexus.endpoint("/api/v1/auth/me", methods=["GET"])
 async def auth_me(current_user: CurrentUser) -> dict[str, Any]:
     """
     Get current authenticated user profile.
@@ -294,7 +302,7 @@ async def auth_me(current_user: CurrentUser) -> dict[str, Any]:
     return await get_me(current_user)
 
 
-@app.endpoint("/auth/refresh", methods=["POST"])
+@nexus.endpoint("/api/v1/auth/refresh", methods=["POST"])
 async def auth_refresh(refresh_token: str) -> dict[str, Any]:
     """
     Refresh access token using refresh token.
@@ -303,12 +311,111 @@ async def auth_refresh(refresh_token: str) -> dict[str, Any]:
     return await refresh_tokens(data)
 
 
-@app.endpoint("/auth/logout", methods=["POST"])
+@nexus.endpoint("/api/v1/auth/logout", methods=["POST"])
 async def auth_logout(current_user: CurrentUser) -> dict[str, Any]:
     """
     Logout user and invalidate tokens.
     """
     return await logout(current_user)
+
+
+# =============================================================================
+# OAUTH SSO ENDPOINTS
+# =============================================================================
+
+from arc.api.routes.oauth import (  # noqa: E402
+    OAuthCallbackRequest,
+    OAuthStartRequest,
+    handle_oauth_callback,
+    start_oauth as start_oauth_handler,
+)
+
+
+@nexus.endpoint("/api/v1/auth/oauth/{provider}", methods=["POST"])
+async def oauth_start_endpoint(provider: str, tenant_id: str, return_url: str | None = None) -> dict[str, Any]:
+    """
+    Start OAuth 2.0 authorization flow.
+
+    Args:
+        provider: OAuth provider (azure, google, github)
+        tenant_id: Tenant ID for SSO configuration
+        return_url: Optional URL to redirect after login
+
+    Returns:
+        Authorization URL with state and PKCE parameters
+
+    Example:
+        POST /api/v1/auth/oauth/azure
+        {
+            "tenant_id": "tenant-123",
+            "return_url": "/dashboard"
+        }
+
+        Response:
+        {
+            "auth_url": "https://login.microsoftonline.com/...",
+            "state": "random-state-value",
+            "code_verifier": "verifier-to-store"
+        }
+    """
+    return await start_oauth_handler(provider, tenant_id, return_url)
+
+
+@nexus.endpoint("/api/v1/auth/oauth/{provider}/callback", methods=["POST"])
+async def oauth_callback_endpoint(
+    provider: str,
+    tenant_id: str,
+    code: str,
+    state: str,
+    code_verifier: str,
+) -> dict[str, Any]:
+    """
+    Handle OAuth 2.0 authorization callback.
+
+    Args:
+        provider: OAuth provider (azure, google, github)
+        tenant_id: Tenant ID for SSO configuration
+        code: Authorization code from provider
+        state: State parameter for CSRF validation
+        code_verifier: PKCE code verifier from start
+
+    Returns:
+        JWT tokens and user data OR link_required action
+
+    Example:
+        POST /api/v1/auth/oauth/azure/callback
+        {
+            "tenant_id": "tenant-123",
+            "code": "auth-code-from-idp",
+            "state": "state-from-start",
+            "code_verifier": "verifier-from-start"
+        }
+
+        Success Response:
+        {
+            "action": "login",
+            "access_token": "jwt-token",
+            "refresh_token": "refresh-token",
+            "expires_in": 900,
+            "user": {
+                "id": "user-123",
+                "email": "user@example.com",
+                "name": "User Name",
+                "role": "viewer"
+            }
+        }
+
+        Link Required Response:
+        {
+            "action": "link_required",
+            "link_data": {
+                "user_id": "user-123",
+                "provider": "azure",
+                "provider_email": "user@example.com"
+            }
+        }
+    """
+    return await handle_oauth_callback(provider, tenant_id, code, state, code_verifier)
 
 
 # =============================================================================
@@ -338,7 +445,7 @@ from arc.api.routes.portfolios import (  # noqa: E402
 )
 
 
-@app.endpoint("/portfolios", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios", methods=["GET"])
 async def api_list_portfolios(
     current_user: CurrentUser,
     portfolio_type: str | None = None,
@@ -349,7 +456,7 @@ async def api_list_portfolios(
     return await list_portfolios(current_user, portfolio_type, active_only, limit)
 
 
-@app.endpoint("/portfolios", methods=["POST"])
+@nexus.endpoint("/api/v1/portfolios", methods=["POST"])
 async def api_create_portfolio(
     current_user: CurrentUser,
     name: str,
@@ -375,7 +482,7 @@ async def api_create_portfolio(
     return await create_portfolio(current_user, data)
 
 
-@app.endpoint("/portfolios/{portfolio_id}", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}", methods=["GET"])
 async def api_get_portfolio(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -384,7 +491,7 @@ async def api_get_portfolio(
     return await get_portfolio(current_user, portfolio_id)
 
 
-@app.endpoint("/portfolios/{portfolio_id}", methods=["PUT"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}", methods=["PUT"])
 async def api_update_portfolio(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -400,7 +507,7 @@ async def api_update_portfolio(
     return await update_portfolio(current_user, portfolio_id, data)
 
 
-@app.endpoint("/portfolios/{portfolio_id}", methods=["DELETE"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}", methods=["DELETE"])
 async def api_delete_portfolio(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -409,7 +516,7 @@ async def api_delete_portfolio(
     return await delete_portfolio(current_user, portfolio_id)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/holdings", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/holdings", methods=["GET"])
 async def api_get_holdings(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -419,7 +526,7 @@ async def api_get_holdings(
     return await get_holdings(current_user, portfolio_id, include_closed)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/holdings", methods=["POST"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/holdings", methods=["POST"])
 async def api_add_holding(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -438,7 +545,7 @@ async def api_add_holding(
     return await add_holding(current_user, portfolio_id, data)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/transactions", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/transactions", methods=["GET"])
 async def api_get_transactions(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -453,7 +560,7 @@ async def api_get_transactions(
     )
 
 
-@app.endpoint("/portfolios/{portfolio_id}/transactions", methods=["POST"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/transactions", methods=["POST"])
 async def api_record_transaction(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -480,7 +587,7 @@ async def api_record_transaction(
     return await record_transaction(current_user, portfolio_id, data)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/valuations", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/valuations", methods=["GET"])
 async def api_get_valuations(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -491,7 +598,7 @@ async def api_get_valuations(
     return await get_valuations(current_user, portfolio_id, start_date, limit)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/valuations/calculate", methods=["POST"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/valuations/calculate", methods=["POST"])
 async def api_calculate_nav(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -501,7 +608,7 @@ async def api_calculate_nav(
     return await calculate_nav(current_user, portfolio_id, valuation_date)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/health", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/health", methods=["GET"])
 async def api_get_health(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -510,7 +617,7 @@ async def api_get_health(
     return await get_health_scan(current_user, portfolio_id)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/allocation/sector", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/allocation/sector", methods=["GET"])
 async def api_get_sector_allocation(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -519,7 +626,7 @@ async def api_get_sector_allocation(
     return await get_sector_allocation(current_user, portfolio_id)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/allocation/asset", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/allocation/asset", methods=["GET"])
 async def api_get_asset_allocation(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -528,7 +635,7 @@ async def api_get_asset_allocation(
     return await get_asset_allocation(current_user, portfolio_id)
 
 
-@app.endpoint("/portfolios/{portfolio_id}/top-holdings", methods=["GET"])
+@nexus.endpoint("/api/v1/portfolios/{portfolio_id}/top-holdings", methods=["GET"])
 async def api_get_top_holdings(
     current_user: CurrentUser,
     portfolio_id: str,
@@ -569,7 +676,7 @@ from arc.api.routes.analytics import (  # noqa: E402
 )
 
 
-@app.endpoint("/securities/{security_id}/ratios", methods=["GET"])
+@nexus.endpoint("/api/v1/securities/{security_id}/ratios", methods=["GET"])
 async def api_get_security_ratios(
     current_user: CurrentUser,
     security_id: str,
@@ -579,7 +686,7 @@ async def api_get_security_ratios(
     return await get_security_ratios(current_user, security_id, as_of_date)
 
 
-@app.endpoint("/securities/{security_id}/ratios/history", methods=["GET"])
+@nexus.endpoint("/api/v1/securities/{security_id}/ratios/history", methods=["GET"])
 async def api_get_ratio_history(
     current_user: CurrentUser,
     security_id: str,
@@ -594,7 +701,7 @@ async def api_get_ratio_history(
     )
 
 
-@app.endpoint("/securities/{security_id}/benchmark", methods=["GET"])
+@nexus.endpoint("/api/v1/securities/{security_id}/benchmark", methods=["GET"])
 async def api_benchmark_security(
     current_user: CurrentUser,
     security_id: str,
@@ -604,7 +711,7 @@ async def api_benchmark_security(
     return await benchmark_security(current_user, security_id, peer_group_id)
 
 
-@app.endpoint("/securities/{security_id}/trend", methods=["GET"])
+@nexus.endpoint("/api/v1/securities/{security_id}/trend", methods=["GET"])
 async def api_get_ratio_trend(
     current_user: CurrentUser,
     security_id: str,
@@ -615,7 +722,7 @@ async def api_get_ratio_trend(
     return await get_ratio_trend(current_user, security_id, ratio_name, periods)
 
 
-@app.endpoint("/analytics/ratios/calculate", methods=["POST"])
+@nexus.endpoint("/api/v1/analytics/ratios/calculate", methods=["POST"])
 async def api_calculate_ratios(
     current_user: CurrentUser,
     security_ids: list[str] | None = None,
@@ -631,13 +738,13 @@ async def api_calculate_ratios(
     return await calculate_ratios(current_user, data)
 
 
-@app.endpoint("/analytics/thresholds/check", methods=["POST"])
+@nexus.endpoint("/api/v1/analytics/thresholds/check", methods=["POST"])
 async def api_check_thresholds(current_user: CurrentUser) -> dict[str, Any]:
     """Check all thresholds and generate alerts."""
     return await check_thresholds(current_user)
 
 
-@app.endpoint("/alerts", methods=["GET"])
+@nexus.endpoint("/api/v1/alerts", methods=["GET"])
 async def api_get_alerts(
     current_user: CurrentUser,
     status: str | None = None,
@@ -649,7 +756,7 @@ async def api_get_alerts(
     return await get_alerts(current_user, status, alert_type, severity, limit)
 
 
-@app.endpoint("/alerts/{alert_id}/acknowledge", methods=["PUT"])
+@nexus.endpoint("/api/v1/alerts/{alert_id}/acknowledge", methods=["PUT"])
 async def api_acknowledge_alert(
     current_user: CurrentUser,
     alert_id: str,
@@ -658,7 +765,7 @@ async def api_acknowledge_alert(
     return await acknowledge_alert(current_user, alert_id)
 
 
-@app.endpoint("/alerts/{alert_id}/dismiss", methods=["PUT"])
+@nexus.endpoint("/api/v1/alerts/{alert_id}/dismiss", methods=["PUT"])
 async def api_dismiss_alert(
     current_user: CurrentUser,
     alert_id: str,
@@ -669,7 +776,7 @@ async def api_dismiss_alert(
     return await dismiss_alert(current_user, alert_id, data)
 
 
-@app.endpoint("/alerts/{alert_id}/resolve", methods=["PUT"])
+@nexus.endpoint("/api/v1/alerts/{alert_id}/resolve", methods=["PUT"])
 async def api_resolve_alert(
     current_user: CurrentUser,
     alert_id: str,
@@ -680,7 +787,7 @@ async def api_resolve_alert(
     return await resolve_alert(current_user, alert_id, data)
 
 
-@app.endpoint("/thresholds", methods=["GET"])
+@nexus.endpoint("/api/v1/thresholds", methods=["GET"])
 async def api_get_thresholds(
     current_user: CurrentUser,
     ratio_name: str | None = None,
@@ -691,7 +798,7 @@ async def api_get_thresholds(
     return await get_thresholds(current_user, ratio_name, portfolio_id, enabled_only)
 
 
-@app.endpoint("/thresholds", methods=["POST"])
+@nexus.endpoint("/api/v1/thresholds", methods=["POST"])
 async def api_configure_threshold(
     current_user: CurrentUser,
     ratio_class: str,
@@ -717,7 +824,7 @@ async def api_configure_threshold(
     return await configure_threshold(current_user, data)
 
 
-@app.endpoint("/thresholds/{threshold_id}", methods=["DELETE"])
+@nexus.endpoint("/api/v1/thresholds/{threshold_id}", methods=["DELETE"])
 async def api_delete_threshold(
     current_user: CurrentUser,
     threshold_id: str,
@@ -726,7 +833,7 @@ async def api_delete_threshold(
     return await delete_threshold(current_user, threshold_id)
 
 
-@app.endpoint("/peer-groups", methods=["GET"])
+@nexus.endpoint("/api/v1/peer-groups", methods=["GET"])
 async def api_get_peer_groups(
     current_user: CurrentUser,
     include_system: bool = True,
@@ -736,7 +843,7 @@ async def api_get_peer_groups(
     return await get_peer_groups(current_user, include_system, group_type)
 
 
-@app.endpoint("/peer-groups", methods=["POST"])
+@nexus.endpoint("/api/v1/peer-groups", methods=["POST"])
 async def api_create_peer_group(
     current_user: CurrentUser,
     name: str,
@@ -754,7 +861,7 @@ async def api_create_peer_group(
     return await create_peer_group(current_user, data)
 
 
-@app.endpoint("/peer-groups/{peer_group_id}", methods=["PUT"])
+@nexus.endpoint("/api/v1/peer-groups/{peer_group_id}", methods=["PUT"])
 async def api_update_peer_group(
     current_user: CurrentUser,
     peer_group_id: str,
@@ -767,7 +874,7 @@ async def api_update_peer_group(
     return await update_peer_group(current_user, peer_group_id, data)
 
 
-@app.endpoint("/peer-groups/{peer_group_id}", methods=["DELETE"])
+@nexus.endpoint("/api/v1/peer-groups/{peer_group_id}", methods=["DELETE"])
 async def api_delete_peer_group(
     current_user: CurrentUser,
     peer_group_id: str,
@@ -796,13 +903,13 @@ from arc.api.routes.users import (  # noqa: E402
 from arc.api.routes.users import get_me as users_get_me  # noqa: E402
 
 
-@app.endpoint("/users/me", methods=["GET"])
+@nexus.endpoint("/api/v1/users/me", methods=["GET"])
 async def api_get_me(current_user: CurrentUser) -> dict[str, Any]:
     """Get current user profile."""
     return await users_get_me(current_user)
 
 
-@app.endpoint("/users/me", methods=["PUT"])
+@nexus.endpoint("/api/v1/users/me", methods=["PUT"])
 async def api_update_me(
     current_user: CurrentUser,
     name: str | None = None,
@@ -814,13 +921,13 @@ async def api_update_me(
     return await update_me(current_user, data)
 
 
-@app.endpoint("/users/me/preferences", methods=["GET"])
+@nexus.endpoint("/api/v1/users/me/preferences", methods=["GET"])
 async def api_get_preferences(current_user: CurrentUser) -> dict[str, Any]:
     """Get user preferences."""
     return await get_preferences(current_user)
 
 
-@app.endpoint("/users/me/preferences", methods=["PUT"])
+@nexus.endpoint("/api/v1/users/me/preferences", methods=["PUT"])
 async def api_update_preferences(
     current_user: CurrentUser,
     theme: str | None = None,
@@ -842,7 +949,7 @@ async def api_update_preferences(
     return await update_preferences(current_user, data)
 
 
-@app.endpoint("/users", methods=["GET"])
+@nexus.endpoint("/api/v1/users", methods=["GET"])
 async def api_list_users(
     current_user: CurrentUser,
     status: str | None = None,
@@ -853,7 +960,7 @@ async def api_list_users(
     return await list_users(current_user, status, role, limit)
 
 
-@app.endpoint("/users", methods=["POST"])
+@nexus.endpoint("/api/v1/users", methods=["POST"])
 async def api_create_user(
     current_user: CurrentUser,
     email: str,
@@ -866,7 +973,7 @@ async def api_create_user(
     return await create_user(current_user, data)
 
 
-@app.endpoint("/users/{user_id}", methods=["PUT"])
+@nexus.endpoint("/api/v1/users/{user_id}", methods=["PUT"])
 async def api_update_user(
     current_user: CurrentUser,
     user_id: str,
@@ -880,7 +987,7 @@ async def api_update_user(
     return await update_user(current_user, user_id, data)
 
 
-@app.endpoint("/users/{user_id}", methods=["DELETE"])
+@nexus.endpoint("/api/v1/users/{user_id}", methods=["DELETE"])
 async def api_deactivate_user(
     current_user: CurrentUser,
     user_id: str,
@@ -902,13 +1009,13 @@ from arc.api.routes.admin import (  # noqa: E402
 )
 
 
-@app.endpoint("/admin/tenant", methods=["GET"])
+@nexus.endpoint("/api/v1/admin/tenant", methods=["GET"])
 async def api_get_tenant(current_user: CurrentUser) -> dict[str, Any]:
     """Get tenant information (admin only)."""
     return await get_tenant(current_user)
 
 
-@app.endpoint("/admin/tenant", methods=["PUT"])
+@nexus.endpoint("/api/v1/admin/tenant", methods=["PUT"])
 async def api_update_tenant(
     current_user: CurrentUser,
     name: str | None = None,
@@ -919,7 +1026,7 @@ async def api_update_tenant(
     return await update_tenant(current_user, data)
 
 
-@app.endpoint("/admin/audit", methods=["GET"])
+@nexus.endpoint("/api/v1/admin/audit", methods=["GET"])
 async def api_get_audit_logs(
     current_user: CurrentUser,
     start_date: str | None = None,
@@ -935,7 +1042,7 @@ async def api_get_audit_logs(
     )
 
 
-@app.endpoint("/admin/metrics", methods=["GET"])
+@nexus.endpoint("/api/v1/admin/metrics", methods=["GET"])
 async def api_get_metrics(current_user: CurrentUser) -> dict[str, Any]:
     """Get usage metrics (admin only)."""
     return await get_metrics(current_user)
@@ -986,6 +1093,7 @@ register_workflows()
 # Export the app for uvicorn
 __all__ = [
     "app",
+    "nexus",
     "db",
     "ALL_MODELS",
     "CORE_MODELS",

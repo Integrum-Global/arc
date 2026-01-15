@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/useBreakpoint";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { MobileNav } from "./MobileNav";
+import { CriticalAlertBanner } from "@/components/alerts/CriticalAlertBanner";
 
 /**
  * AppShell Props
@@ -75,6 +76,9 @@ export function AppShell({ children, className, showSearch = true }: AppShellPro
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+        {/* Critical Alert Banner - Fixed at top */}
+        <CriticalAlertBanner />
+
         {/* Header */}
         <Header onMenuToggle={handleMobileMenuToggle} showSearch={showSearch} />
 

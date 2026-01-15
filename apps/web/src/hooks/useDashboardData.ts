@@ -3,9 +3,10 @@
  *
  * Aggregates data from multiple hooks for the dashboard page.
  * Provides combined loading, error, and data states.
+ * Tracks data freshness and staleness indicators.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { usePortfolios, usePortfolioHealth } from "./usePortfolios";
 import { useAlerts } from "./useAnalytics";
 import { useMorningBrief } from "./useIntelligence";
@@ -14,6 +15,9 @@ import type {
   MarketBrief,
   SectorAllocation,
 } from "@/types/api";
+
+/** Data staleness threshold in milliseconds (5 minutes) */
+const STALE_THRESHOLD_MS = 5 * 60 * 1000;
 
 /**
  * Dashboard summary metrics
@@ -57,6 +61,18 @@ export interface PerformanceDataPoint {
 }
 
 /**
+ * Data freshness information
+ */
+export interface DataFreshness {
+  /** Timestamp of last successful data fetch */
+  lastUpdated: Date | null;
+  /** Whether the data is considered stale */
+  isStale: boolean;
+  /** Whether a refresh is currently in progress */
+  isRefreshing: boolean;
+}
+
+/**
  * Dashboard data hook return type
  */
 export interface DashboardData {
@@ -83,6 +99,8 @@ export interface DashboardData {
     brief: boolean;
     health: boolean;
   };
+  /** Data freshness information */
+  freshness: DataFreshness;
   /** Refresh all data */
   refetch: () => void;
 }
@@ -139,12 +157,18 @@ function generateMockTopHoldings(): TopHolding[] {
  * Hook to fetch and aggregate all dashboard data
  */
 export function useDashboardData(): DashboardData {
+  // Track last successful update and refresh state
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isStale, setIsStale] = useState(false);
+
   // Fetch portfolios
   const {
     data: portfoliosData,
     isLoading: portfoliosLoading,
     error: portfoliosError,
     refetch: refetchPortfolios,
+    dataUpdatedAt: portfoliosUpdatedAt,
   } = usePortfolios({ status: "active" });
 
   // Get first portfolio ID for health check (if available)
@@ -241,12 +265,44 @@ export function useDashboardData(): DashboardData {
   // Combined error state
   const error = portfoliosError || alertsError || briefError || null;
 
-  // Refetch all data
-  const refetch = () => {
+  // Track when data was last updated
+  useEffect(() => {
+    if (portfoliosUpdatedAt && !portfoliosLoading) {
+      setLastUpdated(new Date(portfoliosUpdatedAt));
+      setIsRefreshing(false);
+    }
+  }, [portfoliosUpdatedAt, portfoliosLoading]);
+
+  // Check for staleness periodically
+  useEffect(() => {
+    if (!lastUpdated) return;
+
+    const checkStaleness = () => {
+      const now = Date.now();
+      const elapsed = now - lastUpdated.getTime();
+      setIsStale(elapsed > STALE_THRESHOLD_MS);
+    };
+
+    // Check immediately and then every minute
+    checkStaleness();
+    const interval = setInterval(checkStaleness, 60000);
+    return () => clearInterval(interval);
+  }, [lastUpdated]);
+
+  // Refetch all data with tracking
+  const refetch = useCallback(() => {
+    setIsRefreshing(true);
     refetchPortfolios();
     refetchAlerts();
     refetchBrief();
-  };
+  }, [refetchPortfolios, refetchAlerts, refetchBrief]);
+
+  // Freshness information
+  const freshness: DataFreshness = useMemo(() => ({
+    lastUpdated,
+    isStale,
+    isRefreshing,
+  }), [lastUpdated, isStale, isRefreshing]);
 
   return {
     summary,
@@ -263,6 +319,7 @@ export function useDashboardData(): DashboardData {
       brief: briefLoading,
       health: healthLoading,
     },
+    freshness,
     refetch,
   };
 }

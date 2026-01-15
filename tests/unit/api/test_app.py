@@ -16,45 +16,55 @@ import pytest
 class TestNexusConfiguration:
     """Tests for Nexus application configuration."""
 
-    def test_app_is_nexus_instance(self) -> None:
-        """App should be a Nexus instance."""
+    def test_nexus_is_nexus_instance(self) -> None:
+        """Nexus should be a Nexus instance."""
         from nexus import Nexus
 
-        from arc.api.app import app
+        from arc.api.app import nexus
 
-        # App should be a Nexus instance
-        assert app is not None
-        assert isinstance(app, Nexus)
+        # Nexus should be a Nexus instance
+        assert nexus is not None
+        assert isinstance(nexus, Nexus)
 
-    def test_app_has_nexus_name(self) -> None:
-        """App should have nexus name attribute."""
-        from arc.api.app import app
+    def test_nexus_has_nexus_name(self) -> None:
+        """Nexus should have nexus name attribute."""
+        from arc.api.app import nexus
 
         # Nexus hardcodes name="nexus"
-        assert hasattr(app, "name")
-        assert app.name == "nexus"
+        assert hasattr(nexus, "name")
+        assert nexus.name == "nexus"
 
-    def test_app_has_endpoint_decorator(self) -> None:
-        """App should have endpoint decorator for routes."""
-        from arc.api.app import app
+    def test_nexus_has_endpoint_decorator(self) -> None:
+        """Nexus should have endpoint decorator for routes."""
+        from arc.api.app import nexus
 
-        assert hasattr(app, "endpoint")
-        assert callable(app.endpoint)
+        assert hasattr(nexus, "endpoint")
+        assert callable(nexus.endpoint)
 
-    def test_app_has_register_method(self) -> None:
-        """App should have register method for workflows."""
-        from arc.api.app import app
+    def test_nexus_has_register_method(self) -> None:
+        """Nexus should have register method for workflows."""
+        from arc.api.app import nexus
 
-        assert hasattr(app, "register")
-        assert callable(app.register)
+        assert hasattr(nexus, "register")
+        assert callable(nexus.register)
 
-    def test_app_has_run_method(self) -> None:
-        """App should have start method for running server."""
-        from arc.api.app import app
+    def test_nexus_has_run_method(self) -> None:
+        """Nexus should have start method for running server."""
+        from arc.api.app import nexus
 
         # Nexus uses start() to run the server
-        assert hasattr(app, "start")
-        assert callable(app.start)
+        assert hasattr(nexus, "start")
+        assert callable(nexus.start)
+
+    def test_app_is_fastapi_instance(self) -> None:
+        """App should be the underlying FastAPI instance."""
+        from fastapi import FastAPI
+
+        from arc.api.app import app
+
+        # app is the FastAPI instance exposed for uvicorn ASGI compatibility
+        assert app is not None
+        assert isinstance(app, FastAPI)
 
 
 class TestModelRegistration:
@@ -350,6 +360,7 @@ class TestModuleExports:
 
         # Check that key exports are available
         assert hasattr(api_module, "app")
+        assert hasattr(api_module, "nexus")
         assert hasattr(api_module, "db")
         assert hasattr(api_module, "ALL_MODELS")
         assert hasattr(api_module, "initialize_database")

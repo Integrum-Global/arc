@@ -16,6 +16,9 @@ export type { PerformanceSectionProps } from "./PerformanceSection";
 export { AlertsSection } from "./AlertsSection";
 export type { AlertsSectionProps } from "./AlertsSection";
 
+export { ActionableAlertsWidget } from "./ActionableAlertsWidget";
+export type { ActionableAlertsWidgetProps } from "./ActionableAlertsWidget";
+
 export { BriefSection } from "./BriefSection";
 export type { BriefSectionProps } from "./BriefSection";
 

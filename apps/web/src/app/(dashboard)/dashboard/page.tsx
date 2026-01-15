@@ -15,7 +15,7 @@ import {
   SummaryCards,
   AllocationSection,
   PerformanceSection,
-  AlertsSection,
+  ActionableAlertsWidget,
   BriefSection,
   QuickActions,
 } from "./components";
@@ -30,6 +30,7 @@ export default function DashboardPage() {
     brief,
     isLoading,
     loadingStates,
+    freshness,
     refetch,
   } = useDashboardData();
 
@@ -37,6 +38,7 @@ export default function DashboardPage() {
     <PageContainer
       title="Dashboard"
       subtitle="Overview of your portfolio performance"
+      data-testid="dashboard-page"
       actions={
         <div className="flex items-center gap-2">
           <Button
@@ -84,10 +86,7 @@ export default function DashboardPage() {
         {/* Alerts and Brief Row */}
         <Grid cols={{ default: 1, lg: 2 }} gap="lg">
           <GridItem>
-            <AlertsSection
-              alerts={activeAlerts}
-              loading={loadingStates.alerts}
-            />
+            <ActionableAlertsWidget loading={loadingStates.alerts} />
           </GridItem>
           <GridItem>
             <BriefSection
@@ -100,7 +99,8 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <QuickActions
           onRefresh={refetch}
-          isRefreshing={isLoading}
+          isRefreshing={freshness.isRefreshing}
+          freshness={freshness}
         />
       </SectionGroup>
     </PageContainer>

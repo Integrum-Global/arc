@@ -1,0 +1,220 @@
+# ==============================================================================
+# ARC Investment Platform - Docker Compose (Development)
+# ==============================================================================
+# Usage:
+#   docker-compose up -d              # Start all services
+#   docker-compose up -d postgres redis  # Start dependencies only
+#   docker-compose logs -f api        # Follow API logs
+#   docker-compose down               # Stop all services
+#   docker-compose down -v            # Stop and remove volumes
+# ==============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database with pgvector extension
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: arc_postgres
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-arc}
+      POSTGRES_USER: ${DB_USERNAME:-arc}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-arc_dev_password}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-arc} -d ${DB_DATABASE:-arc}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - arc_backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: arc_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - arc_backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ---------------------------------------------------------------------------
+  # Backend API (Nexus/FastAPI)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: arc_api
+    environment:
+      # Environment
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      # Database
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-arc}
+      - DB_USERNAME=${DB_USERNAME:-arc}
+      - DB_PASSWORD=${DB_PASSWORD:-arc_dev_password}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-20}
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=${REDIS_DB:-0}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # API
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_DEBUG=${API_DEBUG:-true}
+      - API_CORS_ORIGINS=${API_CORS_ORIGINS:-["http://localhost:3000","http://localhost:5173"]}
+      - API_PREFIX=${API_PREFIX:-/api/v1}
+      - API_DOCS_URL=${API_DOCS_URL:-/docs}
+      - API_JWT_SECRET_KEY=${API_JWT_SECRET_KEY:-dev_jwt_secret_change_in_production}
+      - API_JWT_ALGORITHM=${API_JWT_ALGORITHM:-HS256}
+      - API_JWT_EXPIRATION_MINUTES=${API_JWT_EXPIRATION_MINUTES:-60}
+      # Data Providers
+      - PROVIDER_EODHD_API_KEY=${PROVIDER_EODHD_API_KEY:-}
+      - PROVIDER_EODHD_BASE_URL=${PROVIDER_EODHD_BASE_URL:-https://eodhd.com/api}
+      # Kaizen AI
+      - KAIZEN_PROVIDER=${KAIZEN_PROVIDER:-anthropic}
+      - KAIZEN_MODEL=${KAIZEN_MODEL:-claude-sonnet-4-20250514}
+      - KAIZEN_ANTHROPIC_API_KEY=${KAIZEN_ANTHROPIC_API_KEY:-}
+      - KAIZEN_OPENAI_API_KEY=${KAIZEN_OPENAI_API_KEY:-}
+      - KAIZEN_OLLAMA_BASE_URL=${KAIZEN_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - KAIZEN_TEMPERATURE=${KAIZEN_TEMPERATURE:-0.7}
+      - KAIZEN_MAX_TOKENS=${KAIZEN_MAX_TOKENS:-4096}
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./src:/app/src:cached
+      - ./scripts:/app/scripts:cached
+      - ./tests:/app/tests:cached
+      - api_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - arc_frontend
+      - arc_backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # ---------------------------------------------------------------------------
+  # Web Frontend (Next.js)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: development
+    container_name: arc_web
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:${API_PORT:-8000}
+      - NEXT_TELEMETRY_DISABLED=1
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      - ./apps/web/src:/app/src:cached
+      - ./apps/web/public:/app/public:cached
+      - ./apps/web/e2e:/app/e2e:cached
+      - ./apps/web/tests:/app/tests:cached
+      # Exclude node_modules from volume mount
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - arc_frontend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  api_logs:
+    driver: local
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+networks:
+  arc_frontend:
+    driver: bridge
+  arc_backend:
+    driver: bridge
+    internal: true  # No external access for security

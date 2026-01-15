@@ -224,7 +224,7 @@ export function BarChart({
   className,
   valueFormat = "number",
   currency = "USD",
-  colors = CHART_COLORS.sectors,
+  colors = CHART_COLORS.categories,
   showGrid = true,
   radius = 4,
   maxBars,

@@ -759,6 +759,148 @@ export const handlers = [
       },
     ]);
   }),
+
+  // ==========================================================================
+  // SSO / Linked Accounts Endpoints
+  // ==========================================================================
+
+  // Get linked accounts (absolute URL)
+  http.get(`${API_BASE}/auth/linked-accounts`, async () => {
+    await delay(50);
+
+    return HttpResponse.json([
+      {
+        id: "link-1",
+        provider_type: "azure",
+        provider_email: "user@company.com",
+        provider_name: "John Doe",
+        linked_at: "2024-01-01T00:00:00Z",
+        last_login_at: "2024-01-10T00:00:00Z",
+      },
+      {
+        id: "link-2",
+        provider_type: "google",
+        provider_email: "user@gmail.com",
+        provider_name: "John Doe",
+        linked_at: "2024-01-02T00:00:00Z",
+        last_login_at: "2024-01-09T00:00:00Z",
+      },
+    ]);
+  }),
+
+  // Get linked accounts (relative URL for test environment)
+  http.get("/api/v1/auth/linked-accounts", async () => {
+    await delay(50);
+
+    return HttpResponse.json([
+      {
+        id: "link-1",
+        provider_type: "azure",
+        provider_email: "user@company.com",
+        provider_name: "John Doe",
+        linked_at: "2024-01-01T00:00:00Z",
+        last_login_at: "2024-01-10T00:00:00Z",
+      },
+      {
+        id: "link-2",
+        provider_type: "google",
+        provider_email: "user@gmail.com",
+        provider_name: "John Doe",
+        linked_at: "2024-01-02T00:00:00Z",
+        last_login_at: "2024-01-09T00:00:00Z",
+      },
+    ]);
+  }),
+
+  // Get auth methods (absolute URL)
+  http.get(`${API_BASE}/auth/methods`, async () => {
+    await delay(50);
+
+    return HttpResponse.json({
+      linked_accounts: [
+        {
+          id: "link-1",
+          provider_type: "azure",
+          provider_email: "user@company.com",
+          provider_name: "John Doe",
+          linked_at: "2024-01-01T00:00:00Z",
+          last_login_at: "2024-01-10T00:00:00Z",
+        },
+        {
+          id: "link-2",
+          provider_type: "google",
+          provider_email: "user@gmail.com",
+          provider_name: "John Doe",
+          linked_at: "2024-01-02T00:00:00Z",
+          last_login_at: "2024-01-09T00:00:00Z",
+        },
+      ],
+      has_password: true,
+    });
+  }),
+
+  // Get auth methods (relative URL for test environment)
+  http.get("/api/v1/auth/methods", async () => {
+    await delay(50);
+
+    return HttpResponse.json({
+      linked_accounts: [
+        {
+          id: "link-1",
+          provider_type: "azure",
+          provider_email: "user@company.com",
+          provider_name: "John Doe",
+          linked_at: "2024-01-01T00:00:00Z",
+          last_login_at: "2024-01-10T00:00:00Z",
+        },
+        {
+          id: "link-2",
+          provider_type: "google",
+          provider_email: "user@gmail.com",
+          provider_name: "John Doe",
+          linked_at: "2024-01-02T00:00:00Z",
+          last_login_at: "2024-01-09T00:00:00Z",
+        },
+      ],
+      has_password: true,
+    });
+  }),
+
+  // Start OAuth flow (absolute URL)
+  http.post(`${API_BASE}/auth/oauth/:provider`, async ({ params }) => {
+    await delay(50);
+
+    return HttpResponse.json({
+      auth_url: `https://oauth.${params.provider}.com/authorize?client_id=test`,
+      state: `test-state-${params.provider}`,
+      code_verifier: `test-verifier-${params.provider}`,
+    });
+  }),
+
+  // Start OAuth flow (relative URL for test environment)
+  http.post("/api/v1/auth/oauth/:provider", async ({ params }) => {
+    await delay(50);
+
+    return HttpResponse.json({
+      auth_url: `https://oauth.${params.provider}.com/authorize?client_id=test`,
+      state: `test-state-${params.provider}`,
+      code_verifier: `test-verifier-${params.provider}`,
+    });
+  }),
+
+  // Unlink account (absolute URL)
+  http.delete(`${API_BASE}/auth/link/:provider`, async () => {
+    await delay(50);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Unlink account (relative URL for test environment)
+  http.delete("/api/v1/auth/link/:provider", async () => {
+    await delay(50);
+
+    return HttpResponse.json({ success: true });
+  }),
 ];
 
 // Error handlers for testing error scenarios

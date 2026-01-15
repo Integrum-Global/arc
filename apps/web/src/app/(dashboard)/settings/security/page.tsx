@@ -33,6 +33,7 @@ import {
 import { Eye, EyeOff, Loader2, Shield, Key, Smartphone } from "lucide-react";
 import { SettingsSection, SettingsToggle } from "../components";
 import { Separator } from "@/components/ui/separator";
+import { LinkedAccountsManager } from "@/components/settings/LinkedAccountsManager";
 
 interface PasswordFormData {
   currentPassword: string;
@@ -270,6 +271,9 @@ export default function SecuritySettingsPage() {
           </CardFooter>
         </form>
       </Card>
+
+      {/* Linked Accounts */}
+      <LinkedAccountsManager />
 
       {/* Security Options */}
       <SettingsSection

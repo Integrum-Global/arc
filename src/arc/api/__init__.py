@@ -25,7 +25,8 @@ from arc.api.app import (
     app,
     db,
     initialize_database,
+    nexus,
     shutdown_database,
 )
 
-__all__ = ["app", "db", "ALL_MODELS", "initialize_database", "shutdown_database"]
+__all__ = ["app", "nexus", "db", "ALL_MODELS", "initialize_database", "shutdown_database"]

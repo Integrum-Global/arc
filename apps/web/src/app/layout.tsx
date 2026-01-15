@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
+import { MockDataProvider } from "@/contexts/MockDataContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
           <QueryProvider>
-            {children}
+            <MockDataProvider>
+              {children}
+            </MockDataProvider>
             <ToastProvider />
           </QueryProvider>
         </ThemeProvider>

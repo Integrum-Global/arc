@@ -37,6 +37,8 @@ export interface PageContainerProps {
   padded?: boolean;
   /** Maximum width of the content area */
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
+  /** Data test ID for testing */
+  "data-testid"?: string;
 }
 
 const maxWidthClasses = {
@@ -118,6 +120,7 @@ export function PageContainer({
   contentClassName,
   padded = true,
   maxWidth = "none",
+  "data-testid": dataTestId,
 }: PageContainerProps) {
   const hasHeader = title || subtitle || actions;
 
@@ -128,6 +131,7 @@ export function PageContainer({
         padded && "p-4 md:p-6 lg:p-8",
         className
       )}
+      data-testid={dataTestId}
     >
       <div
         className={cn(

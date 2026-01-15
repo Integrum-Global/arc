@@ -176,13 +176,13 @@ export function SparklineChart({
       return color;
     }
     if (autoColorByTrend) {
-      switch (trend) {
+      switch (trend.direction) {
         case "up":
           return CHART_COLORS.performance.positive;
         case "down":
           return CHART_COLORS.performance.negative;
         default:
-          return CHART_COLORS.text.light;
+          return CHART_COLORS.thresholds.neutral;
       }
     }
     return CHART_COLORS.performance.portfolio;

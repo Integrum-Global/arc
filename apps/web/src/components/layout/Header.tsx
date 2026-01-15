@@ -1,7 +1,7 @@
 /**
  * Header Component
  *
- * Application header with search, notifications, user profile, and theme toggle.
+ * Application header with search, notifications, user profile, theme toggle, and mock data toggle.
  */
 
 "use client";
@@ -20,8 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MockDataToggle } from "@/components/ui/mock-data-toggle";
+import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { Badge } from "@/components/ui/badge";
 import { Menu, Search, Bell, User, Settings, LogOut, HelpCircle } from "lucide-react";
+import { useMockData } from "@/contexts/MockDataContext";
 
 /**
  * Header Props
@@ -201,6 +204,17 @@ function SearchInput() {
 }
 
 /**
+ * Safe hook to access mock data context (may not be available)
+ */
+function useMockDataSafe() {
+  try {
+    return useMockData();
+  } catch {
+    return { isMockEnabled: false, toggleMockData: () => {} };
+  }
+}
+
+/**
  * Header Component
  *
  * @example
@@ -216,6 +230,8 @@ export function Header({
   showSearch = true,
   className,
 }: HeaderProps) {
+  const { isMockEnabled, toggleMockData } = useMockDataSafe();
+
   return (
     <header
       className={cn(
@@ -254,8 +270,9 @@ export function Header({
 
       {/* Right side actions */}
       <div className="flex items-center gap-2">
+        <MockDataToggle enabled={isMockEnabled} onToggle={toggleMockData} />
         <ThemeToggle />
-        <NotificationsDropdown />
+        <NotificationCenter />
         <UserDropdown />
       </div>
     </header>

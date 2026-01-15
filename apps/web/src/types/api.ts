@@ -487,6 +487,37 @@ export interface UpdateAlertThresholdRequest {
 }
 
 // =============================================================================
+// Notification Preferences Types
+// =============================================================================
+
+export type NotificationChannel = "sound" | "toast" | "email" | "badge";
+
+export interface QuietHoursConfig {
+  enabled: boolean;
+  start: number; // Minutes since midnight (e.g., 1320 = 22:00)
+  end: number; // Minutes since midnight (e.g., 420 = 07:00)
+}
+
+export interface AlertTypeNotificationSettings {
+  enabled: boolean;
+  channels: NotificationChannel[];
+}
+
+export interface NotificationPreferences {
+  soundEnabled: boolean;
+  browserNotificationsEnabled: boolean;
+  quietHours: QuietHoursConfig;
+  alertTypeSettings: Record<string, AlertTypeNotificationSettings>;
+}
+
+export interface UpdateNotificationPreferencesRequest {
+  soundEnabled?: boolean;
+  browserNotificationsEnabled?: boolean;
+  quietHours?: QuietHoursConfig;
+  alertTypeSettings?: Record<string, AlertTypeNotificationSettings>;
+}
+
+// =============================================================================
 // Intelligence Types
 // =============================================================================
 

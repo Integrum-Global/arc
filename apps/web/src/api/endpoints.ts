@@ -3,7 +3,7 @@
  * Defines all endpoint functions organized by domain
  */
 
-import { get, post, patch, del } from "./client";
+import { get, post, put, del } from "./client";
 import type {
   // Generic types
   ApiResponse,
@@ -18,6 +18,8 @@ import type {
   UserPreference,
   UpdateUserProfileRequest,
   UpdateUserPreferencesRequest,
+  NotificationPreferences,
+  UpdateNotificationPreferencesRequest,
   // Portfolio types
   Portfolio,
   CreatePortfolioRequest,
@@ -89,7 +91,7 @@ export const usersApi = {
    * Update current user profile
    */
   updateProfile: (data: UpdateUserProfileRequest) =>
-    patch<User>("/users/me", data),
+    put<User>("/users/me", data),
 
   /**
    * Get user preferences
@@ -100,7 +102,18 @@ export const usersApi = {
    * Update user preferences
    */
   updatePreferences: (data: UpdateUserPreferencesRequest) =>
-    patch<UserPreference>("/users/me/preferences", data),
+    put<UserPreference>("/users/me/preferences", data),
+
+  /**
+   * Get notification preferences
+   */
+  notificationPreferences: () => get<NotificationPreferences>("/users/me/notification-preferences"),
+
+  /**
+   * Update notification preferences
+   */
+  updateNotificationPreferences: (data: UpdateNotificationPreferencesRequest) =>
+    put<NotificationPreferences>("/users/me/notification-preferences", data),
 
   /**
    * List users (admin only)
@@ -135,7 +148,7 @@ export const portfoliosApi = {
    * Update an existing portfolio
    */
   update: (id: string, data: UpdatePortfolioRequest) =>
-    patch<Portfolio>(`/portfolios/${id}`, data),
+    put<Portfolio>(`/portfolios/${id}`, data),
 
   /**
    * Delete a portfolio
@@ -168,11 +181,39 @@ export const portfoliosApi = {
   health: (id: string) => get<PortfolioHealth>(`/portfolios/${id}/health`),
 
   /**
-   * Get portfolio valuation
+   * Get portfolio valuations history
+   */
+  valuations: (id: string, startDate?: string, limit?: number) =>
+    get<PortfolioValuation[]>(`/portfolios/${id}/valuations`, {
+      params: { start_date: startDate, limit },
+    }),
+
+  /**
+   * Get portfolio valuation (single snapshot)
    */
   valuation: (id: string, asOfDate?: string) =>
     get<PortfolioValuation>(`/portfolios/${id}/valuation`, {
       params: asOfDate ? { as_of_date: asOfDate } : undefined,
+    }),
+
+  /**
+   * Get sector allocation
+   */
+  sectorAllocation: (id: string) =>
+    get<Record<string, unknown>>(`/portfolios/${id}/allocation/sector`),
+
+  /**
+   * Get asset allocation
+   */
+  assetAllocation: (id: string) =>
+    get<Record<string, unknown>>(`/portfolios/${id}/allocation/asset`),
+
+  /**
+   * Get top holdings
+   */
+  topHoldings: (id: string, limit?: number) =>
+    get<Holding[]>(`/portfolios/${id}/top-holdings`, {
+      params: limit ? { limit } : undefined,
     }),
 };
 
@@ -185,7 +226,7 @@ export const analyticsApi = {
    * Get security ratios
    */
   securityRatios: (securityId: string, asOfDate?: string) =>
-    get<SecurityRatios>(`/analytics/securities/${securityId}/ratios`, {
+    get<SecurityRatios>(`/securities/${securityId}/ratios`, {
       params: asOfDate ? { as_of_date: asOfDate } : undefined,
     }),
 
@@ -195,28 +236,44 @@ export const analyticsApi = {
   ratioHistory: (
     securityId: string,
     ratioName: string,
-    period?: "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "MAX"
+    startDate?: string,
+    endDate?: string,
+    limit?: number
   ) =>
-    get<RatioHistory>(
-      `/analytics/securities/${securityId}/ratios/${ratioName}/history`,
-      {
-        params: period ? { period } : undefined,
-      }
-    ),
+    get<RatioHistory>(`/securities/${securityId}/ratios/history`, {
+      params: { ratio_name: ratioName, start_date: startDate, end_date: endDate, limit },
+    }),
 
   /**
    * Get benchmark comparison for a security
    */
   benchmark: (securityId: string, peerGroupId?: string) =>
-    get<BenchmarkComparison>(`/analytics/securities/${securityId}/benchmark`, {
+    get<BenchmarkComparison>(`/securities/${securityId}/benchmark`, {
       params: peerGroupId ? { peer_group_id: peerGroupId } : undefined,
     }),
 
   /**
-   * Get portfolio analytics
+   * Get ratio trend analysis
    */
-  portfolioAnalytics: (portfolioId: string) =>
-    get<Record<string, unknown>>(`/analytics/portfolios/${portfolioId}`),
+  ratioTrend: (securityId: string, ratioName: string, periods?: number) =>
+    get<Record<string, unknown>>(`/securities/${securityId}/trend`, {
+      params: { ratio_name: ratioName, periods },
+    }),
+
+  /**
+   * Calculate ratios for securities
+   */
+  calculateRatios: (securityIds?: string[], ratioNames?: string[], forceRecalculate?: boolean) =>
+    post<Record<string, unknown>>("/analytics/ratios/calculate", {
+      security_ids: securityIds,
+      ratio_names: ratioNames,
+      force_recalculate: forceRecalculate,
+    }),
+
+  /**
+   * Check thresholds and generate alerts
+   */
+  checkThresholds: () => post<Record<string, unknown>>("/analytics/thresholds/check"),
 };
 
 // =============================================================================
@@ -238,76 +295,144 @@ export const alertsApi = {
   /**
    * Acknowledge an alert
    */
-  acknowledge: (id: string) => post<Alert>(`/alerts/${id}/acknowledge`),
+  acknowledge: (id: string) => put<Alert>(`/alerts/${id}/acknowledge`),
 
   /**
    * Dismiss an alert
    */
-  dismiss: (id: string) => post<Alert>(`/alerts/${id}/dismiss`),
+  dismiss: (id: string, reason?: string) =>
+    put<Alert>(`/alerts/${id}/dismiss`, { reason }),
 
   /**
    * Resolve an alert
    */
-  resolve: (id: string) => post<Alert>(`/alerts/${id}/resolve`),
+  resolve: (id: string, resolutionNotes?: string) =>
+    put<Alert>(`/alerts/${id}/resolve`, { resolution_notes: resolutionNotes }),
 
   /**
    * Get alert thresholds
    */
-  thresholds: () => get<AlertThreshold[]>("/alerts/thresholds"),
+  thresholds: (ratioName?: string, portfolioId?: string, enabledOnly?: boolean) =>
+    get<AlertThreshold[]>("/thresholds", {
+      params: { ratio_name: ratioName, portfolio_id: portfolioId, enabled_only: enabledOnly },
+    }),
 
   /**
-   * Get a single alert threshold
+   * Get a single alert threshold by ID
    */
-  getThreshold: (id: string) => get<AlertThreshold>(`/alerts/thresholds/${id}`),
+  getThreshold: (id: string) => get<AlertThreshold>(`/thresholds/${id}`),
 
   /**
    * Create an alert threshold
    */
   createThreshold: (data: CreateAlertThresholdRequest) =>
-    post<AlertThreshold>("/alerts/thresholds", data),
+    post<AlertThreshold>("/thresholds", data),
 
   /**
    * Update an alert threshold
    */
   updateThreshold: (id: string, data: UpdateAlertThresholdRequest) =>
-    patch<AlertThreshold>(`/alerts/thresholds/${id}`, data),
+    put<AlertThreshold>(`/thresholds/${id}`, data),
 
   /**
    * Delete an alert threshold
    */
-  deleteThreshold: (id: string) => del<void>(`/alerts/thresholds/${id}`),
+  deleteThreshold: (id: string) => del<void>(`/thresholds/${id}`),
 };
 
 // =============================================================================
 // Intelligence Endpoints
 // =============================================================================
 
+// Intelligence endpoints are not yet implemented in backend
+// TODO: Implement intelligence endpoints when AI features are ready
 export const intelligenceApi = {
   /**
-   * Get market brief
+   * Get market brief (placeholder - not yet implemented)
    */
-  brief: (type: BriefType, portfolioId?: string) =>
-    get<MarketBrief>("/intelligence/brief", {
-      params: { type, portfolio_id: portfolioId },
+  brief: (_type: BriefType, _portfolioId?: string) =>
+    Promise.resolve({} as MarketBrief),
+
+  /**
+   * Query portfolio with natural language (placeholder - not yet implemented)
+   */
+  query: (_data: PortfolioQuery) =>
+    Promise.resolve({ answer: "Intelligence features coming soon" } as PortfolioQueryResponse),
+
+  /**
+   * Get query suggestions (placeholder - not yet implemented)
+   */
+  suggestions: (_portfolioId?: string) =>
+    Promise.resolve([] as QuerySuggestion[]),
+
+  /**
+   * Get AI analysis for a security (placeholder - not yet implemented)
+   */
+  securityAnalysis: (_securityId: string) =>
+    Promise.resolve({} as Record<string, unknown>),
+};
+
+// =============================================================================
+// Peer Group Endpoints
+// =============================================================================
+
+export const peerGroupsApi = {
+  /**
+   * List peer groups
+   */
+  list: (includeSystem?: boolean, groupType?: string) =>
+    get<Record<string, unknown>[]>("/peer-groups", {
+      params: { include_system: includeSystem, group_type: groupType },
     }),
 
   /**
-   * Query portfolio with natural language
+   * Create a peer group
    */
-  query: (data: PortfolioQuery) =>
-    post<PortfolioQueryResponse>("/intelligence/query", data),
+  create: (data: { name: string; security_ids: string[]; description?: string; group_type?: string }) =>
+    post<Record<string, unknown>>("/peer-groups", data),
 
   /**
-   * Get query suggestions
+   * Update a peer group
    */
-  suggestions: (portfolioId?: string) =>
-    get<QuerySuggestion[]>("/intelligence/suggestions", {
-      params: portfolioId ? { portfolio_id: portfolioId } : undefined,
-    }),
+  update: (id: string, data: { name?: string; description?: string; security_ids?: string[] }) =>
+    put<Record<string, unknown>>(`/peer-groups/${id}`, data),
 
   /**
-   * Get AI analysis for a security
+   * Delete a peer group
    */
-  securityAnalysis: (securityId: string) =>
-    get<Record<string, unknown>>(`/intelligence/securities/${securityId}`),
+  delete: (id: string) => del<void>(`/peer-groups/${id}`),
+};
+
+// =============================================================================
+// Admin Endpoints
+// =============================================================================
+
+export const adminApi = {
+  /**
+   * Get tenant information
+   */
+  tenant: () => get<Record<string, unknown>>("/admin/tenant"),
+
+  /**
+   * Update tenant settings
+   */
+  updateTenant: (data: { name?: string; settings?: Record<string, unknown> }) =>
+    put<Record<string, unknown>>("/admin/tenant", data),
+
+  /**
+   * Get audit logs
+   */
+  auditLogs: (params?: {
+    start_date?: string;
+    end_date?: string;
+    action?: string;
+    user_id?: string;
+    entity_type?: string;
+    limit?: number;
+  }) => get<Record<string, unknown>[]>("/admin/audit", { params }),
+
+  /**
+   * Get usage metrics
+   */
+  metrics: () => get<Record<string, unknown>>("/admin/metrics"),
 };

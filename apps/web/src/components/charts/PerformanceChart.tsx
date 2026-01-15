@@ -95,6 +95,10 @@ export interface PerformanceChartProps {
   showLegend?: boolean;
   /** Portfolio label */
   portfolioLabel?: string;
+  /** Animation duration in ms (0 to disable) */
+  animationDuration?: number;
+  /** Enable animation on data changes */
+  animateOnDataChange?: boolean;
 }
 
 /**
@@ -131,7 +135,7 @@ function CustomTooltip({
   return (
     <div className="rounded-lg border bg-popover px-3 py-2 text-sm shadow-md">
       <p className="mb-2 font-medium text-foreground">
-        {formatChartDate(label, "medium")}
+        {label ? formatChartDate(label, "medium") : "Unknown"}
       </p>
       <div className="flex flex-col gap-1">
         {payload.map((entry, index) => {
@@ -263,8 +267,20 @@ export function PerformanceChart({
   showGrid = true,
   showLegend = true,
   portfolioLabel = "Portfolio",
+  animationDuration = 300,
+  animateOnDataChange = false,
 }: PerformanceChartProps) {
   const dateFormat = getDateFormat(period);
+
+  // Track if this is the initial render for animation control
+  const isInitialRender = React.useRef(true);
+  React.useEffect(() => {
+    isInitialRender.current = false;
+  }, []);
+
+  // Determine if animation should be active
+  // Only animate on initial render, not on data changes (to prevent jarring transitions)
+  const shouldAnimate = animateOnDataChange || isInitialRender.current;
 
   // Determine colors
   const pColor = portfolioColor || CHART_COLORS.performance.portfolio;
@@ -424,6 +440,9 @@ export function PerformanceChart({
                     }
                   : false
               }
+              isAnimationActive={shouldAnimate && animationDuration > 0}
+              animationDuration={animationDuration}
+              animationEasing="ease-out"
             />
           ) : (
             <Line
@@ -442,6 +461,9 @@ export function PerformanceChart({
                     }
                   : false
               }
+              isAnimationActive={shouldAnimate && animationDuration > 0}
+              animationDuration={animationDuration}
+              animationEasing="ease-out"
             />
           )}
 
@@ -464,6 +486,9 @@ export function PerformanceChart({
                     }
                   : false
               }
+              isAnimationActive={shouldAnimate && animationDuration > 0}
+              animationDuration={animationDuration}
+              animationEasing="ease-out"
             />
           )}
 

@@ -534,3 +534,176 @@ cd apps/web && npm test
 # Mobile: Run tests
 cd apps/mobile && flutter test
 ```
+
+---
+
+## Phase 4: UI/UX Enhancements
+
+### 4.1 Alert Strategy Redesign (Priority: HIGH)
+**Objective**: Transform scattered alerts into a tiered intervention system with clear prioritization.
+
+**Phase 1 - Foundation** (Week 1: 10 hours):
+- [ ] TODO-ALERT-001: Create Alert Store with Zustand (3h)
+  - File: `todos/active/TODO-ALERT-001-alert-store-foundation.md`
+  - Deliverable: Global alert state management with tier-based filtering
+
+- [ ] TODO-ALERT-002: Implement Alert Priority Calculator (2h)
+  - File: `todos/active/TODO-ALERT-002-priority-calculator.md`
+  - Deliverable: Tier determination algorithm (Tier 1/2/3)
+
+- [ ] TODO-ALERT-003: Create Sound Manager with Quiet Hours (2h)
+  - File: `todos/active/TODO-ALERT-003-sound-manager.md`
+  - Deliverable: Sound playback with quiet hours support
+
+- [ ] TODO-ALERT-004: Set Up SSE Connection (3h)
+  - File: `todos/active/TODO-ALERT-004-sse-integration.md`
+  - Deliverable: Real-time alert streaming via Server-Sent Events
+
+**Phase 2 - Critical Tier** (Week 2: 8 hours):
+- [ ] TODO-ALERT-005: Build CriticalAlertBanner Component (4h)
+  - File: `todos/active/TODO-ALERT-005-critical-banner.md`
+  - Deliverable: Fixed banner for Tier 1 alerts with acknowledge/view actions
+
+**Phase 3 - Actionable Tier** (Week 3: 12 hours):
+- [ ] TODO-ALERT-006: Create NotificationCenter Dropdown (4h)
+  - File: `todos/active/TODO-ALERT-006-notification-center.md`
+  - Deliverable: Header dropdown with badge count and grouped alerts
+
+- [ ] TODO-ALERT-007: Build ActionableAlertsWidget (4h)
+  - File: `todos/active/TODO-ALERT-007-actionable-widget.md`
+  - Deliverable: Dashboard widget for Tier 2 alerts with CTAs
+
+- [ ] TODO-ALERT-008: Create Alert Command Center Page (4h)
+  - File: `todos/active/TODO-ALERT-008-command-center.md`
+  - Deliverable: Full alert management page at `/alerts`
+
+**Phase 4 - Configuration** (Week 4: 5 hours):
+- [ ] TODO-ALERT-009: Build Notification Preferences UI (5h)
+  - File: `todos/active/TODO-ALERT-009-notification-preferences.md`
+  - Deliverable: Settings page for channels, quiet hours, per-type preferences
+
+**Total Estimated Effort**: 35 hours (2-3 weeks)
+
+---
+
+### 4.2 Enterprise SSO (Priority: HIGH)
+**Objective**: Implement OAuth 2.0 SSO for Azure AD (multi-tenant), Google, and GitHub.
+
+**Phase 1 - Backend Foundation** (Week 1-2: 12 hours):
+- [ ] TODO-SSO-001: Create DataFlow Models (2h)
+  - File: `todos/active/TODO-SSO-001-dataflow-models.md`
+  - Deliverable: SSOProvider and LinkedAccount models
+
+- [ ] TODO-SSO-002: Implement OAuth Service with PKCE (6h)
+  - File: `todos/active/TODO-SSO-002-oauth-service.md`
+  - Deliverable: Complete OAuth flow handler for 3 providers
+
+- [ ] TODO-SSO-003: Create OAuth API Routes (4h)
+  - File: `todos/active/TODO-SSO-003-nexus-routes.md`
+  - Deliverable: Nexus workflows for start/callback endpoints
+
+**Phase 2 - Frontend Integration** (Week 2-3: 9 hours):
+- [ ] TODO-SSO-004: Create Login Page with SSO Buttons (4h)
+  - File: `todos/active/TODO-SSO-004-login-page.md`
+  - Deliverable: Login page with Azure/Google/GitHub buttons
+
+- [ ] TODO-SSO-005: Implement OAuth Callback Handler (5h)
+  - File: `todos/active/TODO-SSO-005-callback-handler.md`
+  - Deliverable: Callback page with link-required flow
+
+**Phase 3 - Account Management** (Week 3: 4 hours):
+- [ ] TODO-SSO-006: Create Linked Accounts Manager (4h)
+  - File: `todos/active/TODO-SSO-006-linked-accounts-ui.md`
+  - Deliverable: Settings component for linking/unlinking providers
+
+**Phase 4 - Azure Multi-Tenant** (Week 4: 3 hours):
+- [ ] TODO-SSO-007: Azure AD Configuration and Testing (3h)
+  - File: `todos/active/TODO-SSO-007-azure-multi-tenant.md`
+  - Deliverable: Multi-tenant setup with documentation
+
+**Total Estimated Effort**: 28 hours (3-4 weeks)
+
+---
+
+### 4.3 Dashboard Customization (Priority: MEDIUM)
+**Objective**: Enable self-service dashboard customization with drag-and-drop widgets.
+
+**Phase 1 - Foundation** (Week 1: 9 hours):
+- [ ] TODO-DASH-012: Install dnd-kit Dependencies (0.5h)
+  - File: `todos/active/TODO-DASH-012-install-dependencies.md`
+  - Deliverable: npm packages installed
+
+- [ ] TODO-DASH-001: Create Widget Registry (4h)
+  - File: `todos/active/TODO-DASH-001-widget-registry.md`
+  - Deliverable: Widget definitions with 8+ widgets
+
+- [ ] TODO-DASH-002: Build Dashboard Store (4.5h)
+  - File: `todos/active/TODO-DASH-002-dashboard-store.md`
+  - Deliverable: Zustand store with layout management
+
+**Phase 2 - Core Components** (Week 2-3: 29 hours):
+- [ ] TODO-DASH-003: Build WidgetContainer Component (4h)
+  - File: `todos/active/TODO-DASH-003-widget-container.md`
+  - Deliverable: Wrapper with edit controls
+
+- [ ] TODO-DASH-004: Create DashboardGrid with dnd-kit (6h)
+  - File: `todos/active/TODO-DASH-004-dashboard-grid.md`
+  - Deliverable: Drag-and-drop grid layout
+
+- [ ] TODO-DASH-005: Build WidgetPicker Sidebar (4h)
+  - File: `todos/active/TODO-DASH-005-widget-picker.md`
+  - Deliverable: Sidebar for adding widgets
+
+- [ ] TODO-DASH-006: Create WidgetSettingsModal (3h)
+  - File: `todos/active/TODO-DASH-006-widget-settings-modal.md`
+  - Deliverable: Generic settings modal
+
+- [ ] TODO-DASH-007: Build Widget Settings Components (5h)
+  - File: `todos/active/TODO-DASH-007-widget-settings-components.md`
+  - Deliverable: 5 widget-specific settings components
+
+- [ ] TODO-DASH-008: Create Dashboard Header (3h)
+  - File: `todos/active/TODO-DASH-008-dashboard-header.md`
+  - Deliverable: Edit mode toggle with actions
+
+- [ ] TODO-DASH-009: Refactor Dashboard Page (4h)
+  - File: `todos/active/TODO-DASH-009-dashboard-page-refactor.md`
+  - Deliverable: Integrated DashboardGrid in main page
+
+**Phase 3 - Backend Sync** (Week 3: 7 hours):
+- [ ] TODO-DASH-010: Create Backend API (4h)
+  - File: `todos/active/TODO-DASH-010-backend-api.md`
+  - Deliverable: DataFlow model and API endpoints
+
+- [ ] TODO-DASH-011: Integrate Backend Sync (3h)
+  - File: `todos/active/TODO-DASH-011-sync-integration.md`
+  - Deliverable: Cross-device persistence
+
+**Phase 4 - Polish** (Week 4: 2 hours):
+- [ ] TODO-DASH-013: Add Keyboard Shortcuts (2h)
+  - File: `todos/active/TODO-DASH-013-keyboard-shortcuts.md`
+  - Deliverable: Escape, Ctrl+S shortcuts
+
+**Total Estimated Effort**: 47 hours (3-4 weeks)
+
+---
+
+## Summary: Phase 4 UI/UX Enhancements
+
+| Feature | Priority | Complexity | Est. Effort | Todo Count |
+|---------|----------|------------|-------------|------------|
+| Alert Strategy | HIGH | Medium | 35 hours (2-3 weeks) | 9 todos |
+| Enterprise SSO | HIGH | High | 28 hours (3-4 weeks) | 7 todos |
+| Dashboard Customization | MEDIUM | High | 47 hours (3-4 weeks) | 13 todos |
+
+**Total**: 29 detailed todos covering 110 hours of implementation work
+
+**Recommended Implementation Order**:
+1. **Alert Strategy** - Most impactful for UX, builds on existing components
+2. **Enterprise SSO** - Critical for enterprise adoption, backend foundation exists
+3. **Dashboard Customization** - Polish feature, can leverage existing layout system
+
+**All documentation available in**:
+- `/docs/02-plans/09-alert-strategy/` (01-architecture.md, 02-components.md)
+- `/docs/02-plans/10-enterprise-sso/` (01-architecture.md, 02-implementation.md)
+- `/docs/02-plans/11-dashboard-customization/` (01-architecture.md, 02-components.md)

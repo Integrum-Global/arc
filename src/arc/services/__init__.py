@@ -45,6 +45,7 @@ from arc.services.notification_service import (
 )
 from arc.services.portfolio_service import PortfolioService
 from arc.services.registry import ServiceRegistry, create_services
+from arc.services.sso import SSOService, sso_service
 from arc.services.sync_service import SyncService
 
 __all__ = [
@@ -63,6 +64,8 @@ __all__ = [
     "NotificationService",
     "NotificationConfig",
     "PortfolioService",
+    "SSOService",
+    "sso_service",
     "SyncService",
     "UsageRecord",
     # Registry

@@ -413,23 +413,48 @@ function RatiosTabSkeleton() {
   );
 }
 
+/**
+ * Mock securities list
+ */
+const MOCK_SECURITIES = [
+  { id: "AAPL", name: "Apple Inc.", ticker: "AAPL" },
+  { id: "MSFT", name: "Microsoft Corporation", ticker: "MSFT" },
+  { id: "GOOGL", name: "Alphabet Inc.", ticker: "GOOGL" },
+  { id: "AMZN", name: "Amazon.com, Inc.", ticker: "AMZN" },
+  { id: "META", name: "Meta Platforms, Inc.", ticker: "META" },
+  { id: "NVDA", name: "NVIDIA Corporation", ticker: "NVDA" },
+  { id: "TSLA", name: "Tesla, Inc.", ticker: "TSLA" },
+  { id: "BRK.B", name: "Berkshire Hathaway Inc.", ticker: "BRK.B" },
+];
+
 export function RatiosTab() {
   const [selectedSecurity, setSelectedSecurity] = React.useState("AAPL");
   const [selectedRatio, setSelectedRatio] = React.useState<RatioDefinition | null>(null);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const [isUpdating, setIsUpdating] = React.useState(false);
   const [ratioData, setRatioData] = React.useState<Record<string, RatioData>>({});
 
-  // Simulate loading data
+  // Get selected security info
+  const selectedSecurityInfo = MOCK_SECURITIES.find(s => s.id === selectedSecurity);
+
+  // Simulate loading data - separate initial load from updates
   React.useEffect(() => {
-    setLoading(true);
+    // Only show full loading skeleton on initial load
+    if (Object.keys(ratioData).length === 0) {
+      setIsInitialLoad(true);
+    } else {
+      setIsUpdating(true);
+    }
+
     const timer = setTimeout(() => {
       const data: Record<string, RatioData> = {};
       Object.values(RATIO_DEFINITIONS).flat().forEach((def) => {
         data[def.id] = generateMockRatioData(def);
       });
       setRatioData(data);
-      setLoading(false);
+      setIsInitialLoad(false);
+      setIsUpdating(false);
     }, 800);
     return () => clearTimeout(timer);
   }, [selectedSecurity]);
@@ -439,7 +464,8 @@ export function RatiosTab() {
     setIsSheetOpen(true);
   };
 
-  if (loading) {
+  // Only show skeleton on initial load, not when changing securities
+  if (isInitialLoad && Object.keys(ratioData).length === 0) {
     return <RatiosTabSkeleton />;
   }
 
@@ -452,17 +478,38 @@ export function RatiosTab() {
             Security:
           </label>
           <Select value={selectedSecurity} onValueChange={setSelectedSecurity}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select security" />
+            <SelectTrigger className="w-72">
+              <SelectValue placeholder="Select security">
+                {selectedSecurityInfo && (
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">{selectedSecurityInfo.ticker}</span>
+                    <span className="text-muted-foreground">-</span>
+                    <span className="truncate">{selectedSecurityInfo.name}</span>
+                  </span>
+                )}
+              </SelectValue>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="AAPL">Apple Inc. (AAPL)</SelectItem>
-              <SelectItem value="MSFT">Microsoft Corp. (MSFT)</SelectItem>
-              <SelectItem value="GOOGL">Alphabet Inc. (GOOGL)</SelectItem>
-              <SelectItem value="AMZN">Amazon.com Inc. (AMZN)</SelectItem>
-              <SelectItem value="META">Meta Platforms (META)</SelectItem>
+            <SelectContent className="w-80">
+              {MOCK_SECURITIES.map((security) => (
+                <SelectItem
+                  key={security.id}
+                  value={security.id}
+                  className="py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono font-medium w-14">{security.ticker}</span>
+                    <span className="text-muted-foreground">|</span>
+                    <span>{security.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          {isUpdating && (
+            <span className="text-xs text-muted-foreground animate-pulse">
+              Updating...
+            </span>
+          )}
         </div>
 
         {/* Ratio Groups */}

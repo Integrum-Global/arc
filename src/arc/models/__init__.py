@@ -65,6 +65,12 @@ from arc.models.security import (
     SecurityRatio,
 )
 
+# SSO models
+from arc.models.sso import (
+    LinkedAccount,
+    SSOProvider,
+)
+
 __all__ = [
     # Database
     "db",
@@ -99,4 +105,7 @@ __all__ = [
     "Report",
     "Watchlist",
     "WatchlistItem",
+    # SSO Models
+    "SSOProvider",
+    "LinkedAccount",
 ]

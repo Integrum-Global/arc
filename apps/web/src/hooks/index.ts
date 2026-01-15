@@ -120,6 +120,33 @@ export {
   useDashboardData,
   type DashboardData,
   type DashboardSummary,
+  type DataFreshness,
   type TopHolding,
   type PerformanceDataPoint,
 } from "./useDashboardData";
+
+// =============================================================================
+// Alert Stream Hooks
+// =============================================================================
+export { useAlertStream } from "./useAlertStream";
+
+// =============================================================================
+// Notification Preferences Hooks
+// =============================================================================
+export {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from "./useNotificationPreferences";
+
+// =============================================================================
+// SSO Linked Accounts Hooks
+// =============================================================================
+export {
+  useLinkedAccounts,
+  useAuthMethods,
+  useCanUnlink,
+  useLinkAccount,
+  useUnlinkAccount,
+  type LinkedAccount,
+  type AuthMethodsResponse,
+} from "./useLinkedAccounts";

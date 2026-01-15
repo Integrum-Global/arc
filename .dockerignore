@@ -1,0 +1,118 @@
+# ==============================================================================
+# ARC Investment Platform - Backend .dockerignore
+# ==============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv
+venv
+ENV/
+env/
+.env.local
+.env.*.local
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+.tox
+.nox
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis
+
+# Type checking
+.mypy_cache
+.dmypy.json
+dmypy.json
+
+# Documentation
+docs/_build
+*.md
+!README.md
+LICENSE
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+Jenkinsfile
+
+# Frontend (built separately)
+apps/
+
+# SDK documentation (not needed in container)
+sdk-users/
+
+# IDE and editor configs
+.editorconfig
+.prettierrc
+.eslintrc*
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Secrets (should never be in container)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Test fixtures and data
+tests/fixtures/
+tests/data/
+
+# Development
+todos/
+*.bak

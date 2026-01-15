@@ -11,6 +11,7 @@ This guide provides comprehensive documentation for developers working on the AR
 5. [API Integration](./05-api-integration.md)
 6. [Styling Guide](./06-styling.md)
 7. [Testing](./07-testing.md)
+8. [Alert System](./08-alert-system/README.md) - Real-time notification infrastructure
 
 ## Quick Start
 

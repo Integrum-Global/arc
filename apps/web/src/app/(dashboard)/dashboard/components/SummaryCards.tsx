@@ -70,8 +70,8 @@ function HealthScoreCard({
 
   return (
     <Card className="p-5 gap-0">
-      <div className="flex items-start justify-between">
-        <div className="space-y-1.5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1.5 flex-1 min-w-0">
           <p className="text-sm font-medium text-muted-foreground">
             Health Score
           </p>
@@ -85,13 +85,13 @@ function HealthScoreCard({
             {statusLabels[status]}
           </p>
         </div>
-        <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-muted">
+        <div className="flex items-center justify-center shrink-0">
           <GaugeChart
             value={score}
             min={0}
             max={100}
-            size={80}
-            strokeWidth={8}
+            size={56}
+            strokeWidth={6}
             showValue={false}
             showMinMax={false}
             simpleThresholds={{

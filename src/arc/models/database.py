@@ -33,7 +33,10 @@ async def create_tables() -> None:
     Call this in FastAPI lifespan or test setup.
     Must be called in an async context after models are registered.
     """
-    await db.create_tables_async()
+    # DataFlow's create_tables() is sync, run in executor for async compat
+    import asyncio
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, db.create_tables)
 
 
 async def close_database() -> None:
@@ -42,7 +45,10 @@ async def close_database() -> None:
 
     Call this in FastAPI lifespan teardown.
     """
-    await db.close_async()
+    # DataFlow's close() is sync, run in executor for async compat
+    import asyncio
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, db.close)
 
 
 @asynccontextmanager

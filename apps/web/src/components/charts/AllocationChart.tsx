@@ -298,7 +298,7 @@ export function AllocationChart({
   labelType = "percent",
   interactive = true,
   onSegmentClick,
-  colors = CHART_COLORS.sectors,
+  colors = CHART_COLORS.categories,
   innerRadius = 0.6,
   height = 300,
   className,

@@ -193,25 +193,36 @@ export function Sidebar({ collapsed = false, onToggle, className }: SidebarProps
         </div>
 
         {/* Collapse Toggle */}
-        <div className="border-t p-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className={cn(
-              "w-full justify-center",
-              !collapsed && "justify-start gap-2"
-            )}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <>
-                <ChevronLeft className="h-4 w-4" />
-                <span>Collapse</span>
-              </>
-            )}
-          </Button>
+        <div className="border-t p-2">
+          {collapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggle}
+                  className="w-full h-9 hover:bg-accent"
+                  aria-label="Expand sidebar"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Expand sidebar
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="w-full justify-between px-3 h-9 text-muted-foreground hover:text-foreground hover:bg-accent group"
+              aria-label="Collapse sidebar"
+            >
+              <span className="text-xs">Collapse</span>
+              <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+            </Button>
+          )}
         </div>
       </aside>
     </TooltipProvider>

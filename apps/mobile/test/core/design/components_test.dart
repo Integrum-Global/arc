@@ -532,7 +532,7 @@ void main() {
     group('factory constructors', () {
       testWidgets('search variant has search icon', (tester) async {
         await tester.pumpWidget(buildTestWidget(
-          const AppInput.search(),
+          AppInput.search(),
         ));
 
         expect(find.byIcon(Icons.search), findsOneWidget);
@@ -540,7 +540,7 @@ void main() {
 
       testWidgets('email variant has email icon and label', (tester) async {
         await tester.pumpWidget(buildTestWidget(
-          const AppInput.email(),
+          AppInput.email(),
         ));
 
         expect(find.byIcon(Icons.email_outlined), findsOneWidget);
@@ -549,7 +549,7 @@ void main() {
 
       testWidgets('password variant has lock icon and visibility toggle', (tester) async {
         await tester.pumpWidget(buildTestWidget(
-          const AppInput.password(),
+          AppInput.password(),
         ));
 
         expect(find.byIcon(Icons.lock_outlined), findsOneWidget);
@@ -559,7 +559,7 @@ void main() {
 
       testWidgets('phone variant has phone icon', (tester) async {
         await tester.pumpWidget(buildTestWidget(
-          const AppInput.phone(),
+          AppInput.phone(),
         ));
 
         expect(find.byIcon(Icons.phone_outlined), findsOneWidget);
@@ -568,7 +568,7 @@ void main() {
 
       testWidgets('textArea variant supports multiple lines', (tester) async {
         await tester.pumpWidget(buildTestWidget(
-          const AppInput.textArea(
+          AppInput.textArea(
             label: 'Description',
             maxLines: 4,
           ),
@@ -595,7 +595,7 @@ void main() {
 
       testWidgets('password visibility toggle works', (tester) async {
         await tester.pumpWidget(buildTestWidget(
-          const AppInput.password(),
+          AppInput.password(),
         ));
 
         // Initially obscured
@@ -658,7 +658,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget(
           Form(
             key: formKey,
-            child: const AppInput.email(
+            child: AppInput.email(
               isRequired: true,
             ),
           ),
