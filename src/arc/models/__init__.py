@@ -71,6 +71,11 @@ from arc.models.sso import (
     SSOProvider,
 )
 
+# Dashboard models
+from arc.models.dashboard import (
+    DashboardLayout,
+)
+
 __all__ = [
     # Database
     "db",
@@ -108,4 +113,6 @@ __all__ = [
     # SSO Models
     "SSOProvider",
     "LinkedAccount",
+    # Dashboard Models
+    "DashboardLayout",
 ]

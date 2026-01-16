@@ -123,6 +123,85 @@ describe("dashboardStore", () => {
     });
   });
 
+  describe("enterEditMode", () => {
+    it("enables edit mode", () => {
+      const store = useDashboardStore.getState();
+      store.enterEditMode();
+
+      const { isEditMode } = useDashboardStore.getState();
+      expect(isEditMode).toBe(true);
+    });
+  });
+
+  describe("exitEditMode", () => {
+    beforeEach(() => {
+      const store = useDashboardStore.getState();
+      store.enterEditMode();
+    });
+
+    it("disables edit mode when save is true", () => {
+      const store = useDashboardStore.getState();
+      store.exitEditMode(true);
+
+      const { isEditMode } = useDashboardStore.getState();
+      expect(isEditMode).toBe(false);
+    });
+
+    it("disables edit mode when save is false", () => {
+      const store = useDashboardStore.getState();
+      store.exitEditMode(false);
+
+      const { isEditMode } = useDashboardStore.getState();
+      expect(isEditMode).toBe(false);
+    });
+
+    it("clears hasUnsavedChanges when save is true", () => {
+      const store = useDashboardStore.getState();
+      // Mark as having changes
+      useDashboardStore.setState({ hasUnsavedChanges: true });
+
+      store.exitEditMode(true);
+
+      const { hasUnsavedChanges } = useDashboardStore.getState();
+      expect(hasUnsavedChanges).toBe(false);
+    });
+
+    it("does NOT clear hasUnsavedChanges when save is false", () => {
+      const store = useDashboardStore.getState();
+      // Mark as having changes
+      useDashboardStore.setState({ hasUnsavedChanges: true });
+
+      store.exitEditMode(false);
+
+      // Changes not saved means they're still unsaved (but this is UI state,
+      // actual implementation may vary based on whether you want to revert on cancel)
+      const { hasUnsavedChanges } = useDashboardStore.getState();
+      // In our implementation, we don't clear hasUnsavedChanges on cancel
+      expect(hasUnsavedChanges).toBe(true);
+    });
+
+    it("sets lastSyncedAt when save is true", () => {
+      const store = useDashboardStore.getState();
+      const beforeSave = new Date();
+
+      store.exitEditMode(true);
+
+      const { lastSyncedAt } = useDashboardStore.getState();
+      expect(lastSyncedAt).toBeDefined();
+      expect(lastSyncedAt!.getTime()).toBeGreaterThanOrEqual(beforeSave.getTime());
+    });
+
+    it("clears selectedWidgetId when exiting", () => {
+      const store = useDashboardStore.getState();
+      store.selectWidget("some-widget");
+
+      store.exitEditMode(true);
+
+      const { selectedWidgetId } = useDashboardStore.getState();
+      expect(selectedWidgetId).toBeNull();
+    });
+  });
+
   describe("selectWidget", () => {
     it("selects a widget by id", () => {
       const store = useDashboardStore.getState();
@@ -686,6 +765,8 @@ describe("dashboardStore", () => {
         lastSyncedAt: new Date(),
         hasUnsavedChanges: true,
         setEditMode: () => {},
+        enterEditMode: () => {},
+        exitEditMode: () => {},
         selectWidget: () => {},
         addWidget: () => {},
         removeWidget: () => {},

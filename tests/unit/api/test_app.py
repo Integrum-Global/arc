@@ -74,13 +74,14 @@ class TestModelRegistration:
         """Core models should be defined."""
         from arc.api.app import CORE_MODELS
 
-        assert len(CORE_MODELS) == 5
+        assert len(CORE_MODELS) == 6
         endpoint_names = [name for name, _ in CORE_MODELS]
         assert "tenants" in endpoint_names
         assert "users" in endpoint_names
         assert "user-preferences" in endpoint_names
         assert "notification-preferences" in endpoint_names
         assert "audit-logs" in endpoint_names
+        assert "dashboard-layouts" in endpoint_names
 
     def test_portfolio_models_defined(self) -> None:
         """Portfolio models should be defined."""
@@ -135,7 +136,7 @@ class TestModelRegistration:
             len(CORE_MODELS) + len(PORTFOLIO_MODELS) + len(SECURITY_MODELS) + len(ANALYTICS_MODELS)
         )
         assert len(ALL_MODELS) == expected_count
-        assert len(ALL_MODELS) == 23  # 5 + 6 + 6 + 6
+        assert len(ALL_MODELS) == 24  # 6 + 6 + 6 + 6
 
     def test_all_models_have_valid_structure(self) -> None:
         """All model entries should have (endpoint_name, model_class) structure."""
@@ -383,7 +384,7 @@ class TestModuleExports:
         from arc.api import ALL_MODELS
 
         assert ALL_MODELS is not None
-        assert len(ALL_MODELS) == 23
+        assert len(ALL_MODELS) == 24
 
     def test_initialize_database_importable(self) -> None:
         """initialize_database should be importable from arc.api."""
@@ -427,17 +428,17 @@ class TestModelCounts:
     """Tests for model count verification."""
 
     def test_total_model_count(self) -> None:
-        """Total model count should be 23."""
+        """Total model count should be 24."""
         from arc.api.app import ALL_MODELS
 
-        # 5 core + 6 portfolio + 6 security + 6 analytics = 23
-        assert len(ALL_MODELS) == 23
+        # 6 core + 6 portfolio + 6 security + 6 analytics = 24
+        assert len(ALL_MODELS) == 24
 
     def test_core_model_count(self) -> None:
-        """Core models should have 5 entries."""
+        """Core models should have 6 entries."""
         from arc.api.app import CORE_MODELS
 
-        assert len(CORE_MODELS) == 5
+        assert len(CORE_MODELS) == 6
 
     def test_portfolio_model_count(self) -> None:
         """Portfolio models should have 6 entries."""

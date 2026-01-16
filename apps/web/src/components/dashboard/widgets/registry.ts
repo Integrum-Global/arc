@@ -42,6 +42,15 @@ import { BriefSection } from "@/app/(dashboard)/dashboard/components/BriefSectio
 import { QuickActions } from "@/app/(dashboard)/dashboard/components/QuickActions";
 import { ActionableAlertsWidget } from "@/app/(dashboard)/dashboard/components/ActionableAlertsWidget";
 
+// Import widget settings components
+import {
+  AllocationChartSettings,
+  PerformanceChartSettings,
+  AlertsWidgetSettings,
+  TopHoldingsSettings,
+  BriefSettings,
+} from "./settings";
+
 // =============================================================================
 // Placeholder Widgets (to be implemented)
 // =============================================================================
@@ -97,11 +106,13 @@ export const WIDGETS: Record<string, WidgetDefinition> = {
     configurable: true,
     removable: true,
     defaultConfig: {
-      chartType: "donut",
       showLegend: true,
-      showTopHoldings: true,
+      colorScheme: "default",
+      maxItems: 10,
+      showPercentages: true,
     },
     component: AllocationSection as unknown as React.ComponentType<WidgetProps>,
+    settingsComponent: AllocationChartSettings,
   },
 
   "top-holdings": {
@@ -119,9 +130,10 @@ export const WIDGETS: Record<string, WidgetDefinition> = {
     defaultConfig: {
       limit: 5,
       showChange: true,
-      showWeight: true,
+      showValue: true,
     },
     component: TopHoldingsWidget,
+    settingsComponent: TopHoldingsSettings,
   },
 
   "performance-chart": {
@@ -137,11 +149,13 @@ export const WIDGETS: Record<string, WidgetDefinition> = {
     configurable: true,
     removable: true,
     defaultConfig: {
-      period: "YTD",
+      timeRange: "YTD",
       showBenchmark: true,
       benchmarkSymbol: "SPY",
+      chartType: "line",
     },
     component: PerformanceSection as unknown as React.ComponentType<WidgetProps>,
+    settingsComponent: PerformanceChartSettings,
   },
 
   "alerts": {
@@ -158,9 +172,12 @@ export const WIDGETS: Record<string, WidgetDefinition> = {
     removable: true,
     defaultConfig: {
       maxAlerts: 5,
-      showDismissed: false,
+      showCriticalOnly: false,
+      autoRefresh: true,
+      refreshInterval: 30,
     },
     component: ActionableAlertsWidget as unknown as React.ComponentType<WidgetProps>,
+    settingsComponent: AlertsWidgetSettings,
   },
 
   "market-brief": {
@@ -179,8 +196,10 @@ export const WIDGETS: Record<string, WidgetDefinition> = {
       briefType: "morning",
       showInsights: true,
       showActions: true,
+      updateFrequency: "daily",
     },
     component: BriefSection as unknown as React.ComponentType<WidgetProps>,
+    settingsComponent: BriefSettings,
   },
 
   "quick-actions": {

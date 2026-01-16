@@ -150,3 +150,33 @@ export {
   type LinkedAccount,
   type AuthMethodsResponse,
 } from "./useLinkedAccounts";
+
+// =============================================================================
+// Dashboard Shortcuts Hooks
+// =============================================================================
+export {
+  useDashboardShortcuts,
+  type ShortcutDefinition,
+  type UseDashboardShortcutsOptions,
+  type UseDashboardShortcutsConfig,
+  type UseDashboardShortcutsReturn,
+} from "./useDashboardShortcuts";
+
+// =============================================================================
+// Dashboard Sync Hooks
+// =============================================================================
+export {
+  // Main sync hook
+  useDashboardSync,
+  // Query hooks
+  useLoadLayout,
+  useAllLayouts,
+  // Mutation hooks
+  useSaveLayout,
+  useCreateLayout,
+  useDeleteLayout,
+  useActivateLayout,
+  // Utility hooks
+  useInvalidateDashboardLayouts,
+  usePrefetchLayout,
+} from "./useDashboardSync";

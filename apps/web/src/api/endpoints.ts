@@ -436,3 +436,74 @@ export const adminApi = {
    */
   metrics: () => get<Record<string, unknown>>("/admin/metrics"),
 };
+
+// =============================================================================
+// Dashboard Layout Endpoints
+// =============================================================================
+
+/**
+ * Dashboard layout types for API communication
+ */
+export interface DashboardLayoutWidget {
+  id: string;
+  widgetId: string;
+  position: { x: number; y: number };
+  size: { cols: number; rows: number };
+  settings?: Record<string, unknown>;
+}
+
+export interface DashboardLayout {
+  id: string;
+  name: string;
+  widgets: DashboardLayoutWidget[];
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDashboardLayoutRequest {
+  name: string;
+  widgets: DashboardLayoutWidget[];
+  isDefault?: boolean;
+}
+
+export interface UpdateDashboardLayoutRequest {
+  name?: string;
+  widgets?: DashboardLayoutWidget[];
+  isDefault?: boolean;
+}
+
+export const dashboardApi = {
+  /**
+   * Get all dashboard layouts for current user
+   */
+  getAllLayouts: () => get<DashboardLayout[]>("/users/me/dashboard-layouts"),
+
+  /**
+   * Get the active dashboard layout for current user
+   */
+  getActiveLayout: () => get<DashboardLayout>("/users/me/dashboard-layout"),
+
+  /**
+   * Create a new dashboard layout
+   */
+  createLayout: (data: CreateDashboardLayoutRequest) =>
+    post<DashboardLayout>("/users/me/dashboard-layouts", data),
+
+  /**
+   * Update an existing dashboard layout
+   */
+  updateLayout: (id: string, data: UpdateDashboardLayoutRequest) =>
+    put<DashboardLayout>(`/users/me/dashboard-layouts/${id}`, data),
+
+  /**
+   * Delete a dashboard layout
+   */
+  deleteLayout: (id: string) => del<void>(`/users/me/dashboard-layouts/${id}`),
+
+  /**
+   * Activate a dashboard layout (make it the active layout)
+   */
+  activateLayout: (id: string) =>
+    post<DashboardLayout>(`/users/me/dashboard-layouts/${id}/activate`),
+};

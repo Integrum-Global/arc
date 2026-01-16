@@ -33,6 +33,7 @@ from arc.models import (
     CashAccount,
     CompanyFundamentals,
     CorporateAction,
+    DashboardLayout,
     Dividend,
     Holding,
     NotificationPreference,
@@ -120,6 +121,7 @@ CORE_MODELS = [
     ("user-preferences", UserPreference),
     ("notification-preferences", NotificationPreference),
     ("audit-logs", AuditLog),
+    ("dashboard-layouts", DashboardLayout),
 ]
 
 # Portfolio Models (tenant-scoped)
@@ -1046,6 +1048,119 @@ async def api_get_audit_logs(
 async def api_get_metrics(current_user: CurrentUser) -> dict[str, Any]:
     """Get usage metrics (admin only)."""
     return await get_metrics(current_user)
+
+
+# =============================================================================
+# DASHBOARD LAYOUT ENDPOINTS
+# =============================================================================
+
+from arc.api.routes.dashboard import (  # noqa: E402
+    CreateLayoutRequest,
+    UpdateLayoutRequest,
+    activate_layout,
+    create_layout,
+    delete_layout,
+    get_active_layout,
+    get_layouts,
+    update_layout,
+)
+
+
+@nexus.endpoint("/api/v1/dashboard/layouts", methods=["GET"])
+async def api_get_layouts(current_user: CurrentUser) -> dict[str, Any]:
+    """
+    Get all dashboard layouts for current user.
+
+    Returns all saved layouts. Creates a default layout if user has none.
+    """
+    return await get_layouts(current_user)
+
+
+@nexus.endpoint("/api/v1/dashboard/layouts/active", methods=["GET"])
+async def api_get_active_layout(current_user: CurrentUser) -> dict[str, Any]:
+    """
+    Get the active dashboard layout for current user.
+
+    Returns the layout marked as active. Creates default if none exists.
+    """
+    return await get_active_layout(current_user)
+
+
+@nexus.endpoint("/api/v1/dashboard/layouts", methods=["POST"])
+async def api_create_layout(
+    current_user: CurrentUser,
+    name: str,
+    widgets: list,
+) -> dict[str, Any]:
+    """
+    Create a new dashboard layout.
+
+    Args:
+        name: Layout name (e.g., "Analytics Focus")
+        widgets: List of widget instances with positions and configs
+
+    Returns:
+        Created layout (inactive by default)
+    """
+    data = CreateLayoutRequest(
+        name=name,
+        widgets=widgets,
+    )
+    return await create_layout(current_user, data)
+
+
+@nexus.endpoint("/api/v1/dashboard/layouts/{layout_id}", methods=["PUT"])
+async def api_update_layout(
+    current_user: CurrentUser,
+    layout_id: str,
+    name: str | None = None,
+    widgets: list | None = None,
+    is_active: bool | None = None,
+) -> dict[str, Any]:
+    """
+    Update an existing dashboard layout.
+
+    Args:
+        layout_id: Layout ID to update
+        name: New layout name (optional)
+        widgets: New widget instances (optional)
+        is_active: Set as active layout (optional)
+
+    Returns:
+        Updated layout
+    """
+    data = UpdateLayoutRequest(
+        name=name,
+        widgets=widgets,
+        is_active=is_active,
+    )
+    return await update_layout(current_user, layout_id, data)
+
+
+@nexus.endpoint("/api/v1/dashboard/layouts/{layout_id}", methods=["DELETE"])
+async def api_delete_layout(
+    current_user: CurrentUser,
+    layout_id: str,
+) -> dict[str, Any]:
+    """
+    Delete a dashboard layout.
+
+    Cannot delete the last remaining layout.
+    """
+    return await delete_layout(current_user, layout_id)
+
+
+@nexus.endpoint("/api/v1/dashboard/layouts/{layout_id}/activate", methods=["POST"])
+async def api_activate_layout(
+    current_user: CurrentUser,
+    layout_id: str,
+) -> dict[str, Any]:
+    """
+    Set a layout as the active layout.
+
+    Deactivates all other layouts for the user.
+    """
+    return await activate_layout(current_user, layout_id)
 
 
 # =============================================================================

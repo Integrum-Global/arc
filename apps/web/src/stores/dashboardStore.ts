@@ -45,6 +45,8 @@ export interface DashboardState {
 
   // Actions
   setEditMode: (enabled: boolean) => void;
+  enterEditMode: () => void;
+  exitEditMode: (save: boolean) => void;
   selectWidget: (id: string | null) => void;
 
   // Widget management
@@ -252,6 +254,30 @@ export const useDashboardStore = create<DashboardState>()(
           // Clear selection when exiting edit mode
           selectedWidgetId: enabled ? get().selectedWidgetId : null,
         });
+      },
+
+      enterEditMode: () => {
+        set({
+          isEditMode: true,
+        });
+      },
+
+      exitEditMode: (save: boolean) => {
+        if (save) {
+          // Mark as synced when saving (clears hasUnsavedChanges)
+          set({
+            lastSyncedAt: new Date(),
+            hasUnsavedChanges: false,
+            isEditMode: false,
+            selectedWidgetId: null,
+          });
+        } else {
+          // Exit without saving - revert changes would be handled elsewhere
+          set({
+            isEditMode: false,
+            selectedWidgetId: null,
+          });
+        }
       },
 
       selectWidget: (id: string | null) => {
